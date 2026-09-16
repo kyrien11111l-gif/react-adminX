@@ -1,0 +1,109 @@
+/* AutoHeightTable 使用 rc-table 的固定表头结构，并让 body 随剩余空间伸缩。 */
+.auto-height-table {
+  --auto-height-table-scrollbar-size: 6px;
+}
+
+.auto-height-table > .ant-spin,
+.auto-height-table > .ant-spin > .ant-spin-container,
+.auto-height-table > .ant-spin > .ant-spin-container > .ant-table {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.auto-height-table .ant-table-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.auto-height-table .ant-table-header {
+  flex: 0 0 auto;
+}
+
+/* 空数据时 rc-table 仍需保留与有数据时相同的滚动条占位宽度。 */
+.auto-height-table .ant-table-header .ant-table-cell-scrollbar {
+  width: var(--auto-height-table-scrollbar-size) !important;
+  min-width: var(--auto-height-table-scrollbar-size) !important;
+  max-width: var(--auto-height-table-scrollbar-size) !important;
+  padding-inline: 0 !important;
+}
+
+/* 滚动条占位区紧跟在最后一列之后，移除最后一列指向占位区的分隔线。 */
+/* @supports selector(:has(+ .ant-table-cell-scrollbar)) {
+  .auto-height-table .ant-table-header
+    .ant-table-cell:has(+ .ant-table-cell-scrollbar) {
+    border-inline-end: 0 !important;
+  }
+} */
+
+.auto-height-table .ant-table-title,
+.auto-height-table .ant-table-footer {
+  flex: 0 0 auto;
+}
+
+.auto-height-table .ant-table-pagination {
+  flex: 0 0 auto;
+}
+
+/* 表体没有数据时仍占满表头以下的剩余空间，并让空状态垂直居中。 */
+.auto-height-table .ant-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  /* rc-table 会根据数据量切换 overflowY，固定为 scroll 以避免首屏重排表头。 */
+  overflow-y: scroll !important;
+  /* 重置 antd .ant-table 继承的 scrollbar-color，让 WebKit 伪元素接管颜色。 */
+  scrollbar-color: auto;
+}
+
+/* Firefox 不支持 WebKit 滚动条伪元素，只能通过元素 hover 模拟滑块变浅。 */
+@supports not selector(::-webkit-scrollbar) {
+  .auto-height-table .ant-table-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(
+        --ant-color-text-placeholder,
+        rgb(0 0 0 / 25%)
+      ) transparent;
+  }
+
+  .auto-height-table .ant-table-body:hover {
+    scrollbar-color: color-mix(
+        in srgb,
+        var(--ant-color-text-placeholder, rgb(0 0 0 / 25%)) 70%,
+        transparent
+      ) transparent;
+  }
+}
+
+/* Chromium/WebKit 的滚动条尺寸。 */
+.auto-height-table .ant-table-body::-webkit-scrollbar {
+  width: var(--auto-height-table-scrollbar-size);
+  height: var(--auto-height-table-scrollbar-size);
+}
+
+/* 轨道和转角保持透明，避免破坏表格背景。 */
+.auto-height-table .ant-table-body::-webkit-scrollbar-track,
+.auto-height-table .ant-table-body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 滑块使用主题占位色，悬停时降低透明度，避免颜色变深。 */
+.auto-height-table .ant-table-body::-webkit-scrollbar-thumb {
+  background: var(--ant-color-text-placeholder, rgb(0 0 0 / 25%));
+  border-radius: 999px;
+}
+
+.auto-height-table .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: var(--ant-color-text-placeholder, rgb(0 0 0 / 25%));
+  background: color-mix(
+    in srgb,
+    var(--ant-color-text-placeholder, rgb(0 0 0 / 25%)) 70%,
+    transparent
+  );
+}
+
+.auto-height-table-empty .ant-table-body > table,
+.auto-height-table-empty .ant-table-body > table > tbody,
+.auto-height-table-empty .ant-table-placeholder > td {
+  height: 100%;
+}

@@ -84,6 +84,7 @@ export function App() {
   return (
     <ConfigProvider
       locale={zhCN}
+      input={{ autoComplete: "off" }}
       theme={{
         cssVar: {},
         algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,

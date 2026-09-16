@@ -36,11 +36,12 @@
   #root {
     height: 100vh;
     background: var(--app-background);
+    /* 应用壳层由内部滚动容器承载滚动，避免 Tooltip 弹层触发页面外层滚动条。 */
+    overflow: hidden;
   }
 
   body {
     min-width: 320px;
-    overflow-x: hidden;
     color: var(--app-secondary-text);
   }
 
@@ -77,38 +78,6 @@
 /* SimpleBar 滚动条使用主题中的三级文本色。 */
 .simplebar-scrollbar::before {
   background: var(--ant-color-text-tertiary);
-}
-
-/* 表格滚动条：保留标准属性和 Chromium/WebKit 的兼容写法。 */
-.auto-height-table .ant-table-body {
-  /* Firefox 的滚动条颜色和宽度。 */
-  scrollbar-color: var(
-      --ant-color-text-placeholder,
-      rgb(0 0 0 / 25%)
-    ) transparent;
-  scrollbar-width: thin;
-}
-
-/* Chromium/WebKit 的滚动条尺寸。 */
-.auto-height-table .ant-table-body::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-/* 轨道和转角保持透明，避免破坏表格背景。 */
-.auto-height-table .ant-table-body::-webkit-scrollbar-track,
-.auto-height-table .ant-table-body::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-/* 滑块使用主题占位色，并在悬停时提高对比度。 */
-.auto-height-table .ant-table-body::-webkit-scrollbar-thumb {
-  background: var(--ant-color-text-placeholder, rgb(0 0 0 / 25%));
-  border-radius: 999px;
-}
-
-.auto-height-table .ant-table-body::-webkit-scrollbar-thumb:hover {
-  background: var(--ant-color-text, rgb(0 0 0 / 88%));
 }
 
 /* 页面主题切换使用 View Transition，但不启用浏览器默认动画。 */

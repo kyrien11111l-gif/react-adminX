@@ -13,10 +13,12 @@ import {
 } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { useCallback, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { queryData } from '@/api'
 import {
   QueryForm,
   AutoHeightTable,
+  EllipsisParagraph,
   type QueryDateRangeValue,
   type QueryFormField,
   TableContainer,
@@ -29,7 +31,6 @@ import {
   useTableQuery
 } from '@/hooks'
 import {
-  queryRows,
   type QueryCategory,
   type QueryFilters,
   type QueryPriority,
@@ -45,6 +46,11 @@ interface QueryFormValues {
   applicant?: string
   title?: string
   updatedAt?: QueryDateRangeValue
+}
+
+interface QueryRequestValues extends QueryFormValues {
+  pageSize: number
+  pageCurrent: number
 }
 
 const categoryLabels: Record<QueryCategory, string> = {
@@ -107,7 +113,8 @@ const queryFields: QueryFormField<QueryFormValues>[] = [
     name: 'keyword',
     label: null,
     props: {
-      placeholder: '查询单号、标题或申请人'
+      placeholder: '查询单号、标题或申请人',
+      autoComplete: 'off'
     }
   },
   {
@@ -177,9 +184,12 @@ const queryFields: QueryFormField<QueryFormValues>[] = [
   }
 ]
 
-const initialQueryValues: QueryFormValues = {}
+const initialQueryValues: QueryRequestValues = {
+  pageSize: 20,
+  pageCurrent: 1
+}
 
-function toQueryFilters(values: QueryFormValues): QueryFilters {
+function toQueryFilters(values: QueryRequestValues): QueryFilters {
   const [startDate, endDate] = values.updatedAt ?? []
 
   return {
@@ -189,15 +199,19 @@ function toQueryFilters(values: QueryFormValues): QueryFilters {
     applicant: values.applicant,
     title: values.title,
     startDate: startDate?.format('YYYY-MM-DD'),
-    endDate: endDate?.format('YYYY-MM-DD')
+    endDate: endDate?.format('YYYY-MM-DD'),
+    pageSize: values.pageSize,
+    pageCurrent: values.pageCurrent
   }
 }
 
 export default function QueryPage() {
   const { message } = AntApp.useApp()
   const [density, setDensity] = useState<TableDensity>('medium')
+  const [, setSearchParams] = useSearchParams()
   const queryRequest = useCallback(
-    (values: QueryFormValues) => queryData(toQueryFilters(values)),
+    (values: QueryRequestValues, signal?: AbortSignal) =>
+      queryData(toQueryFilters(values), signal),
     []
   )
   const handleQueryError = useCallback(
@@ -219,14 +233,56 @@ export default function QueryPage() {
         key: 'orderNo',
         title: '查询单号',
         dataIndex: 'orderNo',
-        width: 180,
+        width: 230,
         align: 'center',
         render: (orderNo: string, record) => (
-          <div>
-            <Typography.Text strong>{orderNo}</Typography.Text>
-            <br />
-            <Typography.Text type="secondary">{record.title}</Typography.Text>
+          <div className="min-w-0">
+            <EllipsisParagraph strong tooltip={orderNo}>
+              {orderNo}
+            </EllipsisParagraph>
+            <EllipsisParagraph
+              type="secondary"
+              tooltip={record.title}
+            >
+              {record.title}
+            </EllipsisParagraph>
           </div>
+        )
+      },
+      {
+        key: 'requestId',
+        title: '请求标识',
+        dataIndex: 'requestId',
+        width: 280,
+        align: 'center',
+        render: (requestId: string) => (
+          <EllipsisParagraph rows={2} tooltip={requestId}>
+            {requestId}
+          </EllipsisParagraph>
+        )
+      },
+      {
+        key: 'description',
+        title: '请求描述',
+        dataIndex: 'description',
+        width: 320,
+        align: 'center',
+        render: (description: string) => (
+          <EllipsisParagraph tooltip={description}>
+            {description}
+          </EllipsisParagraph>
+        )
+      },
+      {
+        key: 'remark',
+        title: '处理备注',
+        dataIndex: 'remark',
+        width: 280,
+        align: 'center',
+        render: (remark: string) => (
+          <EllipsisParagraph  tooltip={remark}>
+            {remark}
+          </EllipsisParagraph>
         )
       },
       {
@@ -291,14 +347,14 @@ export default function QueryPage() {
         title: '更新时间',
         dataIndex: 'updatedAt',
         align: 'center',
-        width: 170
+        width: 180
       },
       {
         key: 'duration',
         title: '处理耗时',
         dataIndex: 'duration',
-        width: 120,
-        align: 'center'
+        align: 'center',
+        width: 160
       },
       {
         key: 'actions',
@@ -323,34 +379,73 @@ export default function QueryPage() {
   } = useTableColumns<QueryRow>({
     columns
   })
-  const { dataSource, total, loading, runQuery, refresh } = useTableQuery<
-    QueryFormValues,
+  const {
+    dataSource,
+    total,
+    loading,
+    lastValues,
+    runQuery,
+    refresh
+  } = useTableQuery<
+    QueryRequestValues,
     QueryRow
   >({
-    initialData: queryRows,
+    initialData: [],
     initialValues: initialQueryValues,
     query: queryRequest,
     onError: handleQueryError
   })
-  const { pagination, resetPagination } = useTablePagination({ total })
+  const { pagination, pageSize, resetPagination } = useTablePagination({
+    total,
+    defaultPageCurrent: 1,
+    defaultPageSize: 20,
+    onChange: (page, nextPageSize) => {
+      void runQuery({
+        ...lastValues,
+        pageCurrent: page,
+        pageSize: nextPageSize
+      })
+    }
+  })
   function handleQuery(values: QueryFormValues) {
     resetPagination()
-    void runQuery(values)
+    void runQuery({
+      ...values,
+      pageCurrent: 1,
+      pageSize
+    })
   }
 
   function handleReset() {
     resetPagination()
-    void runQuery({})
+    void runQuery({
+      pageCurrent: 1,
+      pageSize
+    })
   }
 
   function handleCreate() {
     void message.info('新增功能待接入')
   }
 
+  // function handleChangeQuery() {
+  //   setSearchParams(
+  //     (currentParams) => {
+  //       const nextParams = new URLSearchParams(currentParams)
+  //       nextParams.set('changed', 'true')
+  //       return nextParams
+  //     },
+  //     { replace: true }
+  //   )
+  // }
+
   function handleExport() {
     const exportColumns: Array<{ key: keyof QueryRow; title: string }> = [
       { key: 'orderNo', title: '查询单号' },
       { key: 'title', title: '业务标题' },
+      { key: 'requestId', title: '请求标识' },
+      { key: 'description', title: '请求描述' },
+      { key: 'remark', title: '处理备注' },
       { key: 'category', title: '业务类型' },
       { key: 'applicant', title: '申请人' },
       { key: 'department', title: '申请部门' },
@@ -409,6 +504,12 @@ export default function QueryPage() {
                 <Button icon={<DownloadOutlined />} onClick={handleExport}>
                   导出
                 </Button>
+                {/* <Button
+                  icon={<DownloadOutlined />}
+                  onClick={handleChangeQuery}
+                >
+                  改变参数
+                </Button> */}
               </>
             }
             extra={<Typography.Text type="secondary">共 {total} 条</Typography.Text>}
@@ -430,7 +531,6 @@ export default function QueryPage() {
           dataSource={dataSource}
           loading={loading}
           size={density}
-          scroll={{ x: 1440 }}
           pagination={pagination}
         />
       </TableContainer>

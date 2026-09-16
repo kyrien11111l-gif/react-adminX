@@ -1,5 +1,5 @@
 import { Layout, theme } from 'antd'
-import { MotionConfig, motion } from 'motion/react'
+import { motion } from 'motion/react'
 import SimpleBar from 'simplebar-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useOutlet } from 'react-router-dom'
@@ -141,20 +141,18 @@ export function PageLayout() {
           }}
         >
           <SimpleBar className="h-full [&_.simplebar-content-wrapper]:h-full [&_.simplebar-content]:h-full [&_.simplebar-content]:min-h-0">
-            <MotionConfig reducedMotion="user">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0.48 }}
-                animate={{ opacity: 1 }}
-                transition={{
-                  duration: 0.45,
-                  ease: 'circInOut'
-                }}
-                className="flex h-full min-h-0 flex-col p-2 min-[576px]:p-4"
-              >
-                {outlet}
-              </motion.div>
-            </MotionConfig>
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: 0.48,
+                ease: [0.65, 0, 0.35, 1]
+              }}
+              className="flex h-full min-h-0 flex-col p-2 min-[576px]:p-4"
+            >
+              {outlet}
+            </motion.div>
           </SimpleBar>
         </Layout.Content>
       </Layout>

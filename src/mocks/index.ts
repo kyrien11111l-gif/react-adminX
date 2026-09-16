@@ -5,7 +5,7 @@ import { handleMockQuery } from '@/mocks/query'
 import { handleMockPermissions, handleMockUserInfo } from '@/mocks/user'
 import type { QueryFilters } from '@/pages/system/query/data'
 
-const MOCK_LATENCY = 240
+const MOCK_LATENCY = 1_000
 
 function getPath(input: RequestInfo | URL): string {
   const rawUrl =

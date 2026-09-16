@@ -11,12 +11,17 @@ export interface QueryFilters {
   title?: string
   startDate?: string
   endDate?: string
+  pageSize?: number
+  pageCurrent?: number
 }
 
 export interface QueryRow {
   id: number
   orderNo: string
   title: string
+  requestId: string
+  description: string
+  remark: string
   category: QueryCategory
   applicant: string
   status: QueryStatus
@@ -38,10 +43,27 @@ const queryPriorities: QueryPriority[] = ['high', 'medium', 'low']
 const queryProcessors = ['张敏', '周凯', '陈璐', '赵博', '孙怡']
 const querySources: QuerySource[] = ['portal', 'api', 'schedule', 'import']
 const queryDurations = ['2 分钟', '15 分钟', '1 小时', '3 小时', '1 天']
+const queryDescriptionTemplates = [
+  '需要在订单中心、库存中心和数据仓库之间完成字段映射、增量校验、权限校验与结果回写，执行完成后还要保留完整的审计记录。',
+  '需要对历史数据进行分批处理并校验异常记录，任务期间不能影响线上查询，同时要将处理结果同步给业务负责人和运维人员。',
+  '需要核对多套系统中的角色、账号和组织关系，发现不一致时生成差异清单，确认无误后再执行批量修复和通知。'
+]
+const queryRemarkTemplates = [
+  '请在业务低峰期执行，完成后核对明细、汇总和审计日志，确认数据链路无遗漏。',
+  '本条记录包含较长的模拟备注，用于验证表格中的文本省略、悬浮提示和一键复制能力。',
+  '处理前需要业务、研发和安全负责人共同确认，处理后保留原始快照与最终结果，便于后续追溯。'
+]
 
 type QueryRowBase = Omit<
   QueryRow,
-  'department' | 'priority' | 'processor' | 'source' | 'duration'
+  | 'requestId'
+  | 'description'
+  | 'remark'
+  | 'department'
+  | 'priority'
+  | 'processor'
+  | 'source'
+  | 'duration'
 >
 
 const queryRowsBase: QueryRowBase[] = [
@@ -409,6 +431,9 @@ const queryRowsBase: QueryRowBase[] = [
 
 export const queryRows: QueryRow[] = queryRowsBase.map((row, index) => ({
   ...row,
+  requestId: `REQ-${row.orderNo}-DATA-SERVICE-AUDIT-${String(index + 1).padStart(2, '0')}-9F3A7C1E`,
+  description: `${row.title}：${queryDescriptionTemplates[index % queryDescriptionTemplates.length]}`,
+  remark: `${queryRemarkTemplates[index % queryRemarkTemplates.length]} 当前为第 ${index + 1} 条模拟查询记录。`,
   department: queryDepartments[index % queryDepartments.length],
   priority: queryPriorities[index % queryPriorities.length],
   processor: queryProcessors[index % queryProcessors.length],
@@ -425,6 +450,12 @@ function getDateTimestamp(value?: string): number | undefined {
   return Number.isNaN(timestamp) ? undefined : timestamp
 }
 
+function normalizePositiveInteger(value: number | undefined, fallback: number) {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0
+    ? value
+    : fallback
+}
+
 export function queryRowsByFilters(filters: QueryFilters = {}): QueryResult {
   const keyword = filters.keyword?.trim().toLowerCase() ?? ''
   const title = filters.title?.trim().toLowerCase() ?? ''
@@ -435,11 +466,17 @@ export function queryRowsByFilters(filters: QueryFilters = {}): QueryResult {
   const items = queryRows.filter((record) => {
     const recordTitle = record.title.toLowerCase()
     const applicant = record.applicant.toLowerCase()
+    const requestId = record.requestId.toLowerCase()
+    const description = record.description.toLowerCase()
+    const remark = record.remark.toLowerCase()
     const matchesKeyword =
       !keyword ||
       record.orderNo.toLowerCase().includes(keyword) ||
       recordTitle.includes(keyword) ||
-      applicant.includes(keyword)
+      applicant.includes(keyword) ||
+      requestId.includes(keyword) ||
+      description.includes(keyword) ||
+      remark.includes(keyword)
     const matchesCategory =
       !filters.category ||
       filters.category === 'all' ||
@@ -464,5 +501,12 @@ export function queryRowsByFilters(filters: QueryFilters = {}): QueryResult {
     )
   })
 
-  return { items, total: items.length }
+  const pageSize = normalizePositiveInteger(filters.pageSize, items.length || 1)
+  const pageCurrent = normalizePositiveInteger(filters.pageCurrent, 1)
+  const startIndex = (pageCurrent - 1) * pageSize
+
+  return {
+    items: items.slice(startIndex, startIndex + pageSize),
+    total: items.length
+  }
 }
