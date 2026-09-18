@@ -39,6 +39,21 @@ describe('queryRowsByFilters', () => {
     ])
   })
 
+  it('combines multiple table header text filters', () => {
+    const result = queryRowsByFilters({
+      orderNo: 'QY-20260908',
+      applicant: '李晨'
+    })
+
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        id: 2,
+        orderNo: 'QY-20260908-002',
+        applicant: '李晨'
+      })
+    ])
+  })
+
   it('provides long text fields for ellipsis and copy interactions', () => {
     const result = queryRowsByFilters({
       pageSize: 1,

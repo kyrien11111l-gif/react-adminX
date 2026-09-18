@@ -2,8 +2,10 @@ import type { LoginCredentials } from '@/types'
 import { handleMockLogin, jsonResponse } from '@/mocks/auth'
 import { handleMockMenus } from '@/mocks/menu'
 import { handleMockQuery } from '@/mocks/query'
+import { handleMockVirtualQuery } from '@/mocks/virtualQuery'
 import { handleMockPermissions, handleMockUserInfo } from '@/mocks/user'
 import type { QueryFilters } from '@/pages/system/query/data'
+import type { VirtualQueryFilters } from '@/pages/system/virtualQuery/data'
 
 const MOCK_LATENCY = 1_000
 
@@ -90,6 +92,11 @@ export async function mockFetch(
   }
   if (path === '/query' && method === 'POST') {
     return handleMockQuery(parseJsonBody<QueryFilters>(init?.body))
+  }
+  if (path === '/virtual-query' && method === 'POST') {
+    return handleMockVirtualQuery(
+      parseJsonBody<VirtualQueryFilters>(init?.body)
+    )
   }
 
   return jsonResponse(

@@ -5,11 +5,11 @@ export type RequestParams = Record<
   RequestParamValue | readonly RequestParamValue[]
 >
 
-export interface RequestConfig extends Omit<
+export interface RequestConfig<TData = unknown> extends Omit<
   RequestInit,
   'body' | 'method' | 'signal'
 > {
-  auth?: boolean
+  data?: TData
   params?: RequestParams
   signal?: AbortSignal
   timeout?: number

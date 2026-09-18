@@ -1,0 +1,43 @@
+.resizable-table-header-cell {
+  position: relative;
+}
+
+.resizable-table-column-handle {
+  position: absolute;
+  z-index: 3;
+  inset-block: 0;
+  inset-inline-end: -4px;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.resizable-table-column-handle::after {
+  position: absolute;
+  inset-block: 20%;
+  inset-inline-start: 3px;
+  width: 2px;
+  background: transparent;
+  border-radius: 999px;
+  content: '';
+  transition: background-color var(--ant-motion-duration-fast, 0.1s);
+}
+
+.resizable-table-column-handle:hover::after,
+.resizable-table-column-handle:focus-visible::after,
+.resizable-table-header-cell-resizing
+  > .resizable-table-column-handle::after {
+  background: var(--ant-color-primary);
+}
+
+.resizable-table-column-handle:focus-visible {
+  outline: 2px solid var(--ant-color-primary-border);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resizable-table-column-handle::after {
+    transition: none;
+  }
+}

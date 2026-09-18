@@ -1,64 +1,54 @@
-import {
-  DownloadOutlined,
-  FileSearchOutlined,
-  PlusOutlined
-} from '@ant-design/icons'
+import { DownloadOutlined, SearchOutlined } from '@ant-design/icons'
 import {
   App as AntApp,
   Button,
   Card,
-  Input,
+  Table,
   Tag,
   Typography
 } from 'antd'
-import type { TableColumnsType, TableProps } from 'antd'
-import { useCallback, useMemo, useState, type Key } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { queryData } from '@/api'
+import type { TableColumnsType, TableProps, TableRef } from 'antd'
+import { useCallback, useMemo, useRef, useState, type Key } from 'react'
+import { queryVirtualData } from '@/api'
 import {
-  QueryForm,
-  AutoHeightTable,
   EllipsisParagraph,
   getTableHeaderSearchProps,
-  type QueryDateRangeValue,
-  type QueryFormField,
+  QueryForm,
   TableContainer,
   TableToolbar,
+  VirtualTable,
+  type QueryFormField,
   type TableDensity
 } from '@/components'
-import {
-  useTableColumns,
-  useTablePagination,
-  useTableQuery
-} from '@/hooks'
-import {
-  type QueryCategory,
-  type QueryFilters,
-  type QueryHeaderFilterKey,
-  type QueryPriority,
-  type QueryRow,
-  type QuerySource,
-  type QueryStatus
-} from '@/pages/system/query/data'
+import { useTableColumns, useTablePagination, useTableQuery } from '@/hooks'
+import type {
+  QueryCategory,
+  QueryPriority,
+  QueryStatus,
+  VirtualQueryHeaderFilterKey,
+  VirtualQueryFilters,
+  VirtualQueryRow
+} from '@/pages/system/virtualQuery/data'
 
-interface QueryFormValues {
+interface VirtualQueryFormValues {
   keyword?: string
   category?: QueryCategory | 'all'
   status?: QueryStatus | 'all'
   applicant?: string
-  title?: string
-  updatedAt?: QueryDateRangeValue
 }
 
-interface QueryRequestValues extends QueryFormValues {
+interface VirtualQueryRequestValues extends VirtualQueryFormValues {
   orderNo?: string
-  requestId?: string
-  description?: string
-  remark?: string
+  title?: string
   department?: string
-  processor?: string
+  description?: string
   pageSize: number
   pageCurrent: number
+}
+
+const initialQueryValues: VirtualQueryRequestValues = {
+  pageSize: 100,
+  pageCurrent: 1
 }
 
 const categoryLabels: Record<QueryCategory, string> = {
@@ -93,46 +83,38 @@ const priorityColors: Record<QueryPriority, string> = {
   low: 'default'
 }
 
-const sourceLabels: Record<QuerySource, string> = {
-  portal: '业务门户',
-  api: '开放接口',
-  schedule: '定时任务',
-  import: '批量导入'
-}
-
-const queryHeaderFilterLabels: Record<QueryHeaderFilterKey, string> = {
+const virtualQueryHeaderFilterLabels: Record<
+  VirtualQueryHeaderFilterKey,
+  string
+> = {
   orderNo: '查询单号',
-  requestId: '请求标识',
-  description: '请求描述',
-  remark: '处理备注',
+  title: '业务标题',
   applicant: '申请人',
   department: '申请部门',
-  processor: '处理人'
+  description: '请求描述'
 }
 
 const applicantOptions = [
-  { label: '王晓敏', value: '王晓敏' },
-  { label: '李晨', value: '李晨' },
-  { label: '周航', value: '周航' },
-  { label: '陈璐', value: '陈璐' },
-  { label: '赵博', value: '赵博' },
-  { label: '孙怡', value: '孙怡' },
-  { label: '郭洋', value: '郭洋' },
-  { label: '马超', value: '马超' }
-]
+  '王晓敏',
+  '李晨',
+  '周航',
+  '陈璐',
+  '赵博',
+  '孙怡',
+  '郭洋',
+  '马超'
+].map((value) => ({ label: value, value }))
 
-function requestApplicantOptions() {
-  return Promise.resolve(applicantOptions)
-}
-
-const queryFields: QueryFormField<QueryFormValues>[] = [
+const virtualQueryFields: QueryFormField<VirtualQueryFormValues>[] = [
   {
     type: 'input',
     name: 'keyword',
     label: null,
     props: {
-      placeholder: '查询单号、标题或申请人',
-      autoComplete: 'off'
+      allowClear: true,
+      autoComplete: 'off',
+      prefix: <SearchOutlined />,
+      placeholder: '搜索单号、标题或申请人'
     }
   },
   {
@@ -142,13 +124,10 @@ const queryFields: QueryFormField<QueryFormValues>[] = [
     options: [
       { label: '全部', value: 'all' },
       ...Object.entries(categoryLabels).map(([value, label]) => ({
-        value,
-        label
+        label,
+        value
       }))
     ],
-    formItemProps: {
-      tooltip: '选择业务类型后，查询结果将被过滤'
-    },
     props: {
       placeholder: '请选择业务类型'
     }
@@ -160,8 +139,8 @@ const queryFields: QueryFormField<QueryFormValues>[] = [
     options: [
       { label: '全部', value: 'all' },
       ...Object.entries(statusLabels).map(([value, label]) => ({
-        value,
-        label
+        label,
+        value
       }))
     ],
     props: {
@@ -172,151 +151,104 @@ const queryFields: QueryFormField<QueryFormValues>[] = [
     type: 'select',
     name: 'applicant',
     label: '申请人',
-    requestOptions: requestApplicantOptions,
-    props: {
-      placeholder: '展开列表时动态加载',
-      showSearch: true,
-      optionFilterProp: 'label'
-    }
-  },
-  {
-    type: 'custom',
-    name: 'title',
-    label: '业务标题',
-    render: () => (
-      <Input
-        allowClear
-        prefix={<FileSearchOutlined />}
-        placeholder="自定义组件渲染"
-      />
-    )
-  },
-  {
-    type: 'dateRange',
-    name: 'updatedAt',
-    label: '更新时间',
+    options: applicantOptions,
     props: {
       allowClear: true,
-      placeholder: ['开始日期', '结束日期']
+      placeholder: '请选择申请人',
+      showSearch: true,
+      optionFilterProp: 'label'
     }
   }
 ]
 
-const initialQueryValues: QueryRequestValues = {
-  pageSize: 20,
-  pageCurrent: 1
-}
-
-function toQueryFilters(values: QueryRequestValues): QueryFilters {
-  const [startDate, endDate] = values.updatedAt ?? []
-
+function toVirtualQueryFilters(
+  values: VirtualQueryRequestValues
+): VirtualQueryFilters {
   return {
     keyword: values.keyword,
     category: values.category,
     status: values.status,
     orderNo: values.orderNo,
-    requestId: values.requestId,
-    description: values.description,
-    remark: values.remark,
+    title: values.title,
     applicant: values.applicant,
     department: values.department,
-    processor: values.processor,
-    title: values.title,
-    startDate: startDate?.format('YYYY-MM-DD'),
-    endDate: endDate?.format('YYYY-MM-DD'),
+    description: values.description,
     pageSize: values.pageSize,
     pageCurrent: values.pageCurrent
   }
 }
 
-export default function QueryPage() {
+function renderCellText(value: string) {
+  return (
+    <span className="block truncate" title={value}>
+      {value}
+    </span>
+  )
+}
+
+export default function VirtualQueryPage() {
   const { message } = AntApp.useApp()
   const [density, setDensity] = useState<TableDensity>('medium')
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
-  const [, setSearchParams] = useSearchParams()
+  const tableRef = useRef<TableRef>(null)
   const queryRequest = useCallback(
-    (values: QueryRequestValues, signal?: AbortSignal) =>
-      queryData(toQueryFilters(values), signal),
+    (values: VirtualQueryRequestValues, signal?: AbortSignal) =>
+      queryVirtualData(toVirtualQueryFilters(values), signal),
     []
   )
   const handleQueryError = useCallback(
     (error: unknown) => {
-      console.error('查询失败：', error)
+      console.error('虚拟表格查询失败：', error)
       void message.error('查询失败，请稍后重试')
     },
     [message]
   )
   const handleView = useCallback(
-    (record: QueryRow) => {
-      void message.info(`查询单号：${record.orderNo}`)
+    (record: VirtualQueryRow) => {
+      void message.info(`虚拟数据第 ${record.sequence} 条：${record.orderNo}`)
     },
     [message]
   )
-  const columns = useMemo<TableColumnsType<QueryRow>>(
+  const columns = useMemo<TableColumnsType<VirtualQueryRow>>(
     () => [
+      {
+        key: 'sequence',
+        title: '序号',
+        dataIndex: 'sequence',
+        fixed: 'left',
+        width: 88,
+        align: 'center'
+      },
       {
         key: 'orderNo',
         title: '查询单号',
         dataIndex: 'orderNo',
-        width: 230,
-        align: 'center',
-        render: (orderNo: string, record) => (
-          <div className="min-w-0">
-            <EllipsisParagraph strong tooltip={orderNo}>
-              {orderNo}
-            </EllipsisParagraph>
-            <EllipsisParagraph
-              type="secondary"
-              tooltip={record.title}
-            >
-              {record.title}
-            </EllipsisParagraph>
-          </div>
-        )
+        fixed: 'left',
+        width: 190,
+        render: (value: string) => renderCellText(value)
       },
       {
-        key: 'requestId',
-        title: '请求标识',
-        dataIndex: 'requestId',
+        key: 'title',
+        title: '业务标题',
+        dataIndex: 'title',
         width: 280,
         align: 'center',
-        render: (requestId: string) => (
-          <EllipsisParagraph rows={2} tooltip={requestId}>
-            {requestId}
-          </EllipsisParagraph>
-        )
-      },
-      {
-        key: 'description',
-        title: '请求描述',
-        dataIndex: 'description',
-        width: 320,
-        align: 'center',
-        render: (description: string) => (
-          <EllipsisParagraph tooltip={description}>
-            {description}
-          </EllipsisParagraph>
-        )
-      },
-      {
-        key: 'remark',
-        title: '处理备注',
-        dataIndex: 'remark',
-        width: 280,
-        align: 'center',
-        render: (remark: string) => (
-          <EllipsisParagraph  tooltip={remark}>
-            {remark}
-          </EllipsisParagraph>
-        )
+        render: (value: string) => renderCellText(value)
       },
       {
         key: 'category',
         title: '业务类型',
         dataIndex: 'category',
-        width: 140,
+        width: 120,
         align: 'center',
-        render: (category: QueryCategory) => categoryLabels[category]
+        render: (value: QueryCategory) => categoryLabels[value]
+      },
+      {
+        key: 'applicant',
+        title: '申请人',
+        dataIndex: 'applicant',
+        width: 120,
+        align: 'center'
       },
       {
         key: 'department',
@@ -331,23 +263,9 @@ export default function QueryPage() {
         dataIndex: 'priority',
         width: 100,
         align: 'center',
-        render: (priority: QueryPriority) => (
-          <Tag color={priorityColors[priority]}>{priorityLabels[priority]}</Tag>
+        render: (value: QueryPriority) => (
+          <Tag color={priorityColors[value]}>{priorityLabels[value]}</Tag>
         )
-      },
-      {
-        key: 'applicant',
-        title: '申请人',
-        dataIndex: 'applicant',
-        width: 120,
-        align: 'center'
-      },
-      {
-        key: 'processor',
-        title: '处理人',
-        dataIndex: 'processor',
-        width: 120,
-        align: 'center'
       },
       {
         key: 'status',
@@ -355,37 +273,33 @@ export default function QueryPage() {
         dataIndex: 'status',
         width: 120,
         align: 'center',
-        render: (status: QueryStatus) => (
-          <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
+        render: (value: QueryStatus) => (
+          <Tag color={statusColors[value]}>{statusLabels[value]}</Tag>
         )
       },
       {
-        key: 'source',
-        title: '提交来源',
-        dataIndex: 'source',
-        width: 130,
+        key: 'description',
+        title: '请求描述',
+        dataIndex: 'description',
         align: 'center',
-        render: (source: QuerySource) => sourceLabels[source]
+        render: (remark: string) => (
+          <EllipsisParagraph  tooltip={remark}>
+            {remark}
+          </EllipsisParagraph>
+        )
       },
       {
         key: 'updatedAt',
         title: '更新时间',
         dataIndex: 'updatedAt',
-        align: 'center',
-        width: 180
-      },
-      {
-        key: 'duration',
-        title: '处理耗时',
-        dataIndex: 'duration',
-        align: 'center',
-        width: 160
+        width: 180,
+        align: 'center'
       },
       {
         key: 'actions',
         title: '操作',
-        width: 100,
         fixed: 'right',
+        width: 90,
         align: 'center',
         render: (_value, record) => (
           <Button type="link" size="small" onClick={() => handleView(record)}>
@@ -402,10 +316,10 @@ export default function QueryPage() {
     tableScrollX,
     onColumnSettingsChange,
     resetColumnSettings
-  } = useTableColumns<QueryRow>({
-    columns
-  })
-  const rowSelection = useMemo<TableProps<QueryRow>['rowSelection']>(
+  } = useTableColumns<VirtualQueryRow>({ columns })
+  const rowSelection = useMemo<
+    TableProps<VirtualQueryRow>['rowSelection']
+  >(
     () => ({
       align: 'center',
       fixed: true,
@@ -425,21 +339,64 @@ export default function QueryPage() {
     lastValues,
     runQuery,
     refresh
-  } = useTableQuery<
-    QueryRequestValues,
-    QueryRow
-  >({
+  } = useTableQuery<VirtualQueryRequestValues, VirtualQueryRow>({
     initialData: [],
     initialValues: initialQueryValues,
     query: queryRequest,
     onError: handleQueryError
   })
+  const renderSummary = useCallback(
+    (pageData: readonly VirtualQueryRow[]) => {
+      const statusCounts: Record<QueryStatus, number> = {
+        pending: 0,
+        processing: 0,
+        completed: 0,
+        failed: 0
+      }
+
+      pageData.forEach((record) => {
+        statusCounts[record.status] += 1
+      })
+
+      return (
+        <Table.Summary fixed>
+          <Table.Summary.Row>
+            <Table.Summary.Cell index={0} colSpan={tableColumns.length + 1}>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+                <Typography.Text strong>
+                  本页合计 {pageData.length} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  待处理 {statusCounts.pending} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  处理中 {statusCounts.processing} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  已完成 {statusCounts.completed} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  处理失败 {statusCounts.failed} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  已选 {selectedRowKeys.length} 条
+                </Typography.Text>
+              </div>
+            </Table.Summary.Cell>
+          </Table.Summary.Row>
+        </Table.Summary>
+      )
+    },
+    [selectedRowKeys.length, tableColumns.length]
+  )
   const { pagination, pageSize, resetPagination } = useTablePagination({
     total,
-    defaultPageCurrent: 1,
-    defaultPageSize: 20,
+    defaultPageCurrent: initialQueryValues.pageCurrent,
+    defaultPageSize: initialQueryValues.pageSize,
+    pageSizeOptions: [50, 100, 200, 500],
     onChange: (page, nextPageSize) => {
       void runQuery({
+        ...initialQueryValues,
         ...lastValues,
         pageCurrent: page,
         pageSize: nextPageSize
@@ -447,7 +404,7 @@ export default function QueryPage() {
     }
   })
   const handleHeaderFilterChange = useCallback(
-    (key: QueryHeaderFilterKey, value?: string) => {
+    (key: VirtualQueryHeaderFilterKey, value?: string) => {
       const nextValues = { ...lastValues, [key]: value }
 
       if (!value) {
@@ -468,17 +425,17 @@ export default function QueryPage() {
       tableColumns.map((column) => {
         const columnKey = String(column.key ?? '')
 
-        if (!Object.hasOwn(queryHeaderFilterLabels, columnKey)) {
+        if (!Object.hasOwn(virtualQueryHeaderFilterLabels, columnKey)) {
           return column
         }
 
-        const filterKey = columnKey as QueryHeaderFilterKey
+        const filterKey = columnKey as VirtualQueryHeaderFilterKey
 
         return {
           ...column,
-          ...getTableHeaderSearchProps<QueryRow>({
+          ...getTableHeaderSearchProps<VirtualQueryRow>({
             loading,
-            placeholder: `请输入${queryHeaderFilterLabels[filterKey]}`,
+            placeholder: `请输入${virtualQueryHeaderFilterLabels[filterKey]}`,
             value: lastValues[filterKey],
             onChange: (value) => handleHeaderFilterChange(filterKey, value)
           })
@@ -487,7 +444,7 @@ export default function QueryPage() {
     [handleHeaderFilterChange, lastValues, loading, tableColumns]
   )
 
-  function handleQuery(values: QueryFormValues) {
+  function handleQuery(values: VirtualQueryFormValues) {
     resetPagination()
     void runQuery({
       ...lastValues,
@@ -505,36 +462,28 @@ export default function QueryPage() {
     })
   }
 
-  function handleCreate() {
-    void message.info('新增功能待接入')
-  }
+  function handleScrollToRow() {
+    const targetIndex = Math.min(99, dataSource.length - 1)
 
-  function handleChangeQuery() {
-    setSearchParams(
-      (currentParams) => {
-        const nextParams = new URLSearchParams(currentParams)
-        nextParams.set('changed', new Date() + '')
-        return nextParams
-      },
-      { replace: true }
-    )
+    if (targetIndex < 0) {
+      return
+    }
+
+    tableRef.current?.scrollTo({ index: targetIndex, align: 'start' })
+    void message.info(`已定位到当前页第 ${targetIndex + 1} 行`)
   }
 
   function handleExport() {
-    const exportColumns: Array<{ key: keyof QueryRow; title: string }> = [
+    const exportColumns: Array<{
+      key: keyof VirtualQueryRow
+      title: string
+    }> = [
+      { key: 'sequence', title: '序号' },
       { key: 'orderNo', title: '查询单号' },
       { key: 'title', title: '业务标题' },
-      { key: 'requestId', title: '请求标识' },
-      { key: 'description', title: '请求描述' },
-      { key: 'remark', title: '处理备注' },
       { key: 'category', title: '业务类型' },
       { key: 'applicant', title: '申请人' },
-      { key: 'department', title: '申请部门' },
-      { key: 'priority', title: '优先级' },
-      { key: 'processor', title: '处理人' },
       { key: 'status', title: '处理状态' },
-      { key: 'source', title: '提交来源' },
-      { key: 'duration', title: '处理耗时' },
       { key: 'updatedAt', title: '更新时间' }
     ]
     const escapeCell = (value: unknown) =>
@@ -551,7 +500,7 @@ export default function QueryPage() {
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `查询结果-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.download = `虚拟查询结果-${new Date().toISOString().slice(0, 10)}.csv`
     anchor.click()
     URL.revokeObjectURL(url)
     void message.success(`已导出 ${dataSource.length} 条数据`)
@@ -560,40 +509,38 @@ export default function QueryPage() {
   return (
     <main className="flex h-full min-h-0 w-full flex-col gap-4">
       <Card size="small" className="shrink-0">
-        <QueryForm<QueryFormValues>
-          fields={queryFields}
+        <QueryForm<VirtualQueryFormValues>
+          fields={virtualQueryFields}
           loading={loading}
-          name="data-query"
+          name="virtual-data-query"
           onFinish={handleQuery}
           onReset={handleReset}
-          initialValues={{ status: 'all', applicant: '李晨' }}
+          initialValues={{ category: 'all', status: 'all' }}
         />
       </Card>
 
       <TableContainer
         title={
           <TableToolbar
+            title="虚拟数据列表"
             actions={
               <>
                 <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={handleCreate}
+                  disabled={dataSource.length < 100}
+                  onClick={handleScrollToRow}
                 >
-                  新增
+                  定位当前页第 100 行
                 </Button>
                 <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                  导出
-                </Button>
-                <Button
-                  icon={<DownloadOutlined />}
-                  onClick={handleChangeQuery}
-                >
-                  改变参数
+                  导出当前页
                 </Button>
               </>
             }
-            extra={<Typography.Text type="secondary">共 {total} 条</Typography.Text>}
+            extra={
+              <Typography.Text type="secondary">
+                共 {total.toLocaleString()} 条 · 已启用虚拟滚动
+              </Typography.Text>
+            }
             onRefresh={() => {
               void refresh()
             }}
@@ -606,13 +553,16 @@ export default function QueryPage() {
           />
         }
       >
-        <AutoHeightTable<QueryRow>
+        <VirtualTable<VirtualQueryRow>
+          ref={tableRef}
           rowKey="id"
           columns={resolvedTableColumns}
           dataSource={dataSource}
           loading={loading}
           rowSelection={rowSelection}
+          summary={renderSummary}
           size={density}
+          bordered
           pagination={pagination}
           scroll={{ x: tableScrollX }}
         />

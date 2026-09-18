@@ -3,11 +3,26 @@ export type QueryCategory = 'data-sync' | 'report' | 'access-review'
 export type QueryPriority = 'high' | 'medium' | 'low'
 export type QuerySource = 'portal' | 'api' | 'schedule' | 'import'
 
+export type QueryHeaderFilterKey =
+  | 'orderNo'
+  | 'requestId'
+  | 'description'
+  | 'remark'
+  | 'applicant'
+  | 'department'
+  | 'processor'
+
 export interface QueryFilters {
   keyword?: string
   category?: QueryCategory | 'all'
   status?: QueryStatus | 'all'
+  orderNo?: string
+  requestId?: string
+  description?: string
+  remark?: string
   applicant?: string
+  department?: string
+  processor?: string
   title?: string
   startDate?: string
   endDate?: string
@@ -459,6 +474,13 @@ function normalizePositiveInteger(value: number | undefined, fallback: number) {
 export function queryRowsByFilters(filters: QueryFilters = {}): QueryResult {
   const keyword = filters.keyword?.trim().toLowerCase() ?? ''
   const title = filters.title?.trim().toLowerCase() ?? ''
+  const orderNo = filters.orderNo?.trim().toLowerCase() ?? ''
+  const requestIdFilter = filters.requestId?.trim().toLowerCase() ?? ''
+  const descriptionFilter = filters.description?.trim().toLowerCase() ?? ''
+  const remarkFilter = filters.remark?.trim().toLowerCase() ?? ''
+  const applicantFilter = filters.applicant?.trim().toLowerCase() ?? ''
+  const department = filters.department?.trim().toLowerCase() ?? ''
+  const processor = filters.processor?.trim().toLowerCase() ?? ''
   const startDate = getDateTimestamp(filters.startDate)
   const endDate = getDateTimestamp(filters.endDate)
   const endDateLimit = endDate === undefined ? undefined : endDate + 86_399_999
@@ -484,20 +506,27 @@ export function queryRowsByFilters(filters: QueryFilters = {}): QueryResult {
     const matchesStatus =
       !filters.status || filters.status === 'all' || record.status === filters.status
     const matchesApplicant =
-      !filters.applicant || record.applicant === filters.applicant
+      !applicantFilter || applicant.includes(applicantFilter)
     const matchesTitle = !title || recordTitle.includes(title)
+    const matchesColumnText =
+      (!orderNo || record.orderNo.toLowerCase().includes(orderNo)) &&
+      (!requestIdFilter || requestId.includes(requestIdFilter)) &&
+      (!descriptionFilter || description.includes(descriptionFilter)) &&
+      (!remarkFilter || remark.includes(remarkFilter)) &&
+      (!department || record.department.toLowerCase().includes(department)) &&
+      (!processor || record.processor.toLowerCase().includes(processor))
     const updatedAt = new Date(record.updatedAt.replace(' ', 'T')).getTime()
     const matchesDate =
       (startDate === undefined || updatedAt >= startDate) &&
       (endDateLimit === undefined || updatedAt <= endDateLimit)
-
     return (
       matchesKeyword &&
       matchesCategory &&
       matchesStatus &&
       matchesApplicant &&
       matchesTitle &&
-      matchesDate
+      matchesDate &&
+      matchesColumnText
     )
   })
 

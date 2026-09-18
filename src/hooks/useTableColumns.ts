@@ -1,10 +1,15 @@
 import type { TableColumnsType } from 'antd'
 import { useCallback, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import type { ResizableHeaderCellProps } from '@/components/resizableTableHeader'
 import type {
   TableColumnFixed,
   TableColumnSetting
 } from '@/components/tableToolbar/type'
+
+const DEFAULT_COLUMN_WIDTH = 160
+const MIN_COLUMN_WIDTH = 80
+const MAX_COLUMN_WIDTH = 600
 
 interface UseTableColumnsOptions<RecordType> {
   columns: TableColumnsType<RecordType>
@@ -67,6 +72,21 @@ function getColumnFixed<RecordType>(
   return false
 }
 
+export function clampTableColumnWidth(width: number) {
+  return Math.min(
+    Math.max(Math.round(width), MIN_COLUMN_WIDTH),
+    MAX_COLUMN_WIDTH
+  )
+}
+
+function getColumnWidth<RecordType>(column: TableColumn<RecordType>) {
+  return clampTableColumnWidth(
+    typeof column.width === 'number' && Number.isFinite(column.width)
+      ? column.width
+      : DEFAULT_COLUMN_WIDTH
+  )
+}
+
 export function getColumnSettingsFromColumns<RecordType>(
   columns: TableColumnsType<RecordType>
 ): TableColumnSetting[] {
@@ -82,7 +102,8 @@ export function getColumnSettingsFromColumns<RecordType>(
         key,
         label: getColumnLabel(column, key),
         visible: column.hidden !== true,
-        fixed: getColumnFixed(column)
+        fixed: getColumnFixed(column),
+        width: getColumnWidth(column)
       }
     ]
   })
@@ -108,6 +129,7 @@ function mergeGeneratedSettings(
         ...generatedSetting,
         visible: setting.visible,
         fixed: setting.fixed,
+        width: setting.width ?? generatedSetting.width,
         ...(setting.disabled === undefined
           ? {}
           : { disabled: setting.disabled })
@@ -129,7 +151,13 @@ export function useTableColumns<RecordType>({
     () => getColumnSettingsFromColumns(columns),
     [columns]
   )
-  const resolvedDefaultSettings = defaultSettings ?? generatedSettings
+  const resolvedDefaultSettings = useMemo(
+    () =>
+      defaultSettings === undefined
+        ? generatedSettings
+        : mergeGeneratedSettings(defaultSettings, generatedSettings),
+    [defaultSettings, generatedSettings]
+  )
   const [storedColumnSettings, setStoredColumnSettings] = useState(() =>
     cloneSettings(resolvedDefaultSettings)
   )
@@ -139,6 +167,20 @@ export function useTableColumns<RecordType>({
         ? mergeGeneratedSettings(storedColumnSettings, generatedSettings)
         : storedColumnSettings,
     [defaultSettings, generatedSettings, storedColumnSettings]
+  )
+
+  const resizeColumn = useCallback(
+    (key: string, width: number) => {
+      setStoredColumnSettings((currentSettings) =>
+        mergeGeneratedSettings(currentSettings, generatedSettings).map(
+          (setting) =>
+            setting.key === key
+              ? { ...setting, width: clampTableColumnWidth(width) }
+              : setting
+        )
+      )
+    },
+    [generatedSettings]
   )
 
   const tableColumns = useMemo(
@@ -156,9 +198,51 @@ export function useTableColumns<RecordType>({
           return []
         }
 
-        return [{ ...column, fixed: setting.fixed || undefined }]
+        const originalOnHeaderCell = column.onHeaderCell
+        const width = setting.width ?? getColumnWidth(column)
+
+        return [
+          {
+            ...column,
+            fixed: setting.fixed || undefined,
+            width,
+            onHeaderCell: (
+              currentColumn: Parameters<
+                NonNullable<typeof originalOnHeaderCell>
+              >[0]
+            ) => {
+              const originalProps = originalOnHeaderCell?.(currentColumn)
+              const headerCellProps: ResizableHeaderCellProps = {
+                ...originalProps,
+                maxWidth: MAX_COLUMN_WIDTH,
+                minWidth: MIN_COLUMN_WIDTH,
+                onColumnResize: (nextWidth) =>
+                  resizeColumn(setting.key, nextWidth),
+                resizeLabel:
+                  typeof setting.label === 'string'
+                    ? `${setting.label}列`
+                    : `“${setting.key}”列`,
+                width
+              }
+
+              return headerCellProps
+            }
+          }
+        ]
       }),
-    [columnSettings, columns]
+    [columnSettings, columns, resizeColumn]
+  )
+
+  const tableScrollX = useMemo(
+    () =>
+      columnSettings.reduce(
+        (total, setting) =>
+          setting.visible
+            ? total + (setting.width ?? DEFAULT_COLUMN_WIDTH)
+            : total,
+        0
+      ),
+    [columnSettings]
   )
 
   const resetColumnSettings = useCallback(() => {
@@ -168,6 +252,7 @@ export function useTableColumns<RecordType>({
   return {
     columnSettings,
     tableColumns,
+    tableScrollX,
     onColumnSettingsChange: setStoredColumnSettings,
     resetColumnSettings
   }

@@ -1,6 +1,9 @@
 import type { TableColumnsType } from 'antd'
 import { describe, expect, it } from 'vitest'
-import { getColumnSettingsFromColumns } from '@/hooks/useTableColumns'
+import {
+  clampTableColumnWidth,
+  getColumnSettingsFromColumns
+} from '@/hooks/useTableColumns'
 
 interface TestRow {
   name: string
@@ -19,10 +22,40 @@ const columns = [
 describe('useTableColumns defaults', () => {
   it('generates settings from column metadata', () => {
     expect(getColumnSettingsFromColumns(columns)).toEqual([
-      { key: 'name', label: '名称', visible: true, fixed: false },
-      { key: 'status', label: '状态', visible: false, fixed: false },
-      { key: 'computed', label: 'computed', visible: true, fixed: false },
-      { key: 'actions', label: '操作', visible: true, fixed: 'right' }
+      {
+        key: 'name',
+        label: '名称',
+        visible: true,
+        fixed: false,
+        width: 160
+      },
+      {
+        key: 'status',
+        label: '状态',
+        visible: false,
+        fixed: false,
+        width: 160
+      },
+      {
+        key: 'computed',
+        label: 'computed',
+        visible: true,
+        fixed: false,
+        width: 160
+      },
+      {
+        key: 'actions',
+        label: '操作',
+        visible: true,
+        fixed: 'right',
+        width: 160
+      }
     ])
+  })
+
+  it('clamps resized widths to the supported range', () => {
+    expect(clampTableColumnWidth(40)).toBe(80)
+    expect(clampTableColumnWidth(237.6)).toBe(238)
+    expect(clampTableColumnWidth(900)).toBe(600)
   })
 })

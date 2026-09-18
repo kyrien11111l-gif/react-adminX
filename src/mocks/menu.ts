@@ -49,6 +49,18 @@ const mockMenus: Menu[] = [
         }
       },
       {
+        id: 'system-virtual-query',
+        name: '虚拟数据查询',
+        path: 'virtual-query',
+        component: 'system/virtualQuery/index',
+        meta: {
+          title: '虚拟数据查询',
+          icon: 'FileSearchOutlined',
+          permission: 'system:virtual-query:list',
+          layout: 'default'
+        }
+      },
+      {
         id: 'system-audit',
         name: '审计记录',
         path: 'audit',

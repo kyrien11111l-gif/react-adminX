@@ -11,7 +11,8 @@ const mockUser: UserInfo = {
 const mockPermissions = [
   'system:user:list',
   'system:role:list',
-  'system:query:list'
+  'system:query:list',
+  'system:virtual-query:list'
 ]
 
 export function handleMockUserInfo(): Response {

@@ -170,6 +170,21 @@ function createBody(
   data: unknown,
   headers: Headers
 ): BodyInit | undefined {
+  if (typeof FormData !== 'undefined' && data instanceof FormData) {
+    return data
+  }
+
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', data.type || 'application/octet-stream')
+    }
+    return data
+  }
+
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+
   if (data === undefined) {
     return undefined
   }
@@ -178,20 +193,16 @@ function createBody(
     return data
   }
 
-  if (!headers.has('Content-Type')) {
-    headers.set('Content-Type', 'application/json')
-  }
   return JSON.stringify(data)
 }
 
 async function request<T>(
   path: string,
   method: string,
-  data: unknown,
   config: RequestConfig = {}
 ): Promise<T> {
   const {
-    auth = true,
+    data,
     headers: customHeaders,
     params,
     signal: externalSignal,
@@ -209,11 +220,9 @@ async function request<T>(
   const headers = new Headers(customHeaders)
   headers.set('Accept', 'application/json')
 
-  if (auth) {
-    const token = useAuthStore.getState().token
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`)
-    }
+  const token = useAuthStore.getState().token
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`)
   }
 
   const abortContext = createAbortContext(externalSignal, timeout)
@@ -274,35 +283,35 @@ async function request<T>(
 }
 
 export function get<T>(path: string, config?: RequestConfig): Promise<T> {
-  return request<T>(path, 'GET', undefined, config)
+  return request<T>(path, 'GET', config)
 }
 
 export function post<T, TData = unknown>(
   path: string,
-  data?: TData,
-  config?: RequestConfig
+  config?: RequestConfig<TData>
 ): Promise<T> {
-  return request<T>(path, 'POST', data, config)
+  return request<T>(path, 'POST', config)
 }
 
 export function put<T, TData = unknown>(
   path: string,
-  data?: TData,
-  config?: RequestConfig
+  config?: RequestConfig<TData>
 ): Promise<T> {
-  return request<T>(path, 'PUT', data, config)
+  return request<T>(path, 'PUT', config)
 }
 
 export function patch<T, TData = unknown>(
   path: string,
-  data?: TData,
-  config?: RequestConfig
+  config?: RequestConfig<TData>
 ): Promise<T> {
-  return request<T>(path, 'PATCH', data, config)
+  return request<T>(path, 'PATCH', config)
 }
 
-export function remove<T>(path: string, config?: RequestConfig): Promise<T> {
-  return request<T>(path, 'DELETE', undefined, config)
+export function remove<T, TData = unknown>(
+  path: string,
+  config?: RequestConfig<TData>
+): Promise<T> {
+  return request<T>(path, 'DELETE', config)
 }
 
 const requestClient = {

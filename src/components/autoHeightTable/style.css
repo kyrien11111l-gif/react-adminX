@@ -107,3 +107,15 @@
 .auto-height-table-empty .ant-table-placeholder > td {
   height: 100%;
 }
+
+
+
+/* 横向滚动的空状态会生成固定占位层，其伪元素会绘制一条右边框。 */
+.auto-height-table-empty .ant-table-expanded-row-fixed::after {
+  display: none;
+}
+
+/* 空状态固定在表体可视区域内，不跟随横向滚动内容产生位移。 */
+.auto-height-table-empty .ant-table-expanded-row-fixed {
+  width: var(--auto-height-table-empty-content-width) !important;
+}

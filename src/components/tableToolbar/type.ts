@@ -8,6 +8,7 @@ export interface TableColumnSetting {
   label: ReactNode
   visible: boolean
   fixed: TableColumnFixed
+  width?: number
   disabled?: boolean
 }
 

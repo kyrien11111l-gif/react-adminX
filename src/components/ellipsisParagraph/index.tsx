@@ -1,5 +1,6 @@
 import { Typography } from 'antd'
 import type { ComponentProps, ReactNode } from 'react'
+import { joinClassNames } from '@/utils/classNames'
 
 type ParagraphProps = ComponentProps<typeof Typography.Paragraph>
 type EllipsisConfig = Exclude<ParagraphProps['ellipsis'], boolean | undefined>
@@ -66,9 +67,7 @@ export function EllipsisParagraph({
   return (
     <Typography.Paragraph
       {...restProps}
-      className={['ellipsis-paragraph', className]
-        .filter(Boolean)
-        .join(' ')}
+      className={joinClassNames('ellipsis-paragraph', className)}
       copyable={resolvedCopyable}
       ellipsis={resolvedEllipsis}
       style={{

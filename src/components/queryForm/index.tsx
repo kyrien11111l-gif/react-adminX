@@ -178,6 +178,7 @@ export function QueryForm<Values extends object>({
 
     return (
       <Select
+        allowClear
         {...field.props}
         options={remoteOptions[fieldKey] ?? field.options}
         loading={fieldLoading || field.props?.loading}
@@ -197,16 +198,18 @@ export function QueryForm<Values extends object>({
   }
 
   const fieldRenderers = {
-    input: (field) => <Input {...field.props} />,
+    input: (field) => <Input allowClear {...field.props} />,
     select: renderSelectField,
     date: (field) => (
       <DatePicker
+        allowClear
         {...field.props}
         style={{ width: '100%', ...field.props?.style }}
       />
     ),
     dateRange: (field) => (
       <DatePicker.RangePicker
+        allowClear
         {...field.props}
         style={{ width: '100%', ...field.props?.style }}
       />

@@ -8,5 +8,8 @@ export function queryData(
   filters: QueryFilters = {},
   signal?: AbortSignal
 ): Promise<QueryResult> {
-  return request.post<QueryResult, QueryFilters>('/query', filters, { signal })
+  return request.post<QueryResult, QueryFilters>('/query', {
+    data: filters,
+    signal
+  })
 }

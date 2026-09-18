@@ -1,5 +1,6 @@
 import { Card } from 'antd'
 import type { TableContainerProps } from '@/components/tableContainer/type'
+import { joinClassNames } from '@/utils/classNames'
 
 export type * from '@/components/tableContainer/type'
 
@@ -80,9 +81,7 @@ export function TableContainer({
   return (
     <Card
       {...props}
-      className={[tableContainerClassName, className]
-        .filter(Boolean)
-        .join(' ')}
+      className={joinClassNames(tableContainerClassName, className)}
       classNames={mergeCardClassNames(classNames)}
       size={size}
       variant={variant}

@@ -34,6 +34,7 @@ export function useTableQuery<Values, Row>({
       const controller = new AbortController()
       activeRequest.current = controller
       setLastValues(values)
+      setDataSource([])
       setLoading(true)
 
       try {
