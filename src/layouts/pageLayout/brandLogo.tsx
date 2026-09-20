@@ -1,8 +1,9 @@
 import { Typography } from 'antd'
 import { Link } from 'react-router-dom'
 import brandLogo from '@/assets/logo.svg'
-import { APP_NAME, HOME_PATH } from '@/constants'
-import { useLayoutStore } from '@/stores'
+import { APP_NAME } from '@/constants'
+import { FORBIDDEN_PATH } from '@/router/config/constants'
+import { useLayoutStore, usePermissionStore } from '@/stores'
 
 interface BrandLogoProps {
   collapsed?: boolean
@@ -11,10 +12,11 @@ interface BrandLogoProps {
 
 export function BrandLogo({ collapsed = false, className }: BrandLogoProps) {
   const headerHeight = useLayoutStore((state) => state.headerHeight)
+  const homePath = usePermissionStore((state) => state.homePath)
 
   return (
     <Link
-      to={HOME_PATH}
+      to={homePath ?? FORBIDDEN_PATH}
       className={`flex w-full items-center gap-2 overflow-hidden rounded-none ps-4 pe-[15px] text-inherit no-underline ${className ?? ''}`}
       style={{ height: headerHeight }}
       aria-label={`返回${APP_NAME}首页`}

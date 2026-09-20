@@ -138,6 +138,50 @@ export function findFirstLeafPath(
   return undefined
 }
 
+export function findFirstAccessiblePath(
+  menus: Menu[],
+  permissions: readonly string[],
+  parentPath = ''
+): string | undefined {
+  const sortedMenus = [...menus].sort(
+    (left, right) => (left.meta?.rank ?? 0) - (right.meta?.rank ?? 0)
+  )
+
+  for (const menu of sortedMenus) {
+    const permission = menu.meta?.permission
+
+    if (
+      menu.meta?.hidden === true ||
+      menu.meta?.link ||
+      (permission && !permissions.includes(permission))
+    ) {
+      continue
+    }
+
+    const key = joinMenuPath(parentPath, menu.path)
+
+    if (menu.children?.length) {
+      const childPath = findFirstAccessiblePath(
+        menu.children,
+        permissions,
+        key
+      )
+
+      if (childPath) {
+        return childPath
+      }
+
+      continue
+    }
+
+    if (menu.component || menu.meta?.iframe) {
+      return key
+    }
+  }
+
+  return undefined
+}
+
 export function resolveMenuUrl(value?: string): string | undefined {
   if (!value) {
     return undefined

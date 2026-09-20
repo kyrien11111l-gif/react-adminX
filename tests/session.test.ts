@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   useAuthStore,
   usePermissionStore,
   useTabsStore,
   useUserStore
 } from '@/stores'
-import { resetSession } from '@/utils/session'
+import { logoutToLogin, resetSession } from '@/utils/session'
 
 describe('resetSession', () => {
   beforeEach(() => {
@@ -26,6 +26,7 @@ describe('resetSession', () => {
     })
     usePermissionStore.setState({
       initialized: true,
+      homePath: '/dashboard',
       menus: [
         {
           id: 'dashboard',
@@ -51,6 +52,17 @@ describe('resetSession', () => {
       menus: [],
       permissions: []
     })
-    expect(useTabsStore.getState().tabs).toHaveLength(1)
+    expect(useTabsStore.getState().tabs).toHaveLength(0)
+  })
+
+  it('keeps the current page in the visible login URL when logging out', () => {
+    const navigate = vi.fn()
+
+    logoutToLogin(navigate, '/system/query?tab=1#top')
+
+    expect(navigate).toHaveBeenCalledWith(
+      '/login?redirect=/system/query%3Ftab%3D1%23top',
+      { replace: true }
+    )
   })
 })

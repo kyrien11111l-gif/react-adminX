@@ -1,4 +1,3 @@
-import { getDynamicMenus } from '@/router/config/menu'
 import { generateRoutes } from '@/router/dynamic/generateRoutes'
 import { registerDynamicRoutes } from '@/router/dynamic/routeRegistry'
 import type { Menu } from '@/types/menu'
@@ -8,7 +7,7 @@ import type { Menu } from '@/types/menu'
  * routing operation. This module deliberately has no store dependency.
  */
 export function registerDynamicMenuRoutes(menus: Menu[]) {
-  const routes = generateRoutes(getDynamicMenus(menus))
+  const routes = generateRoutes(menus)
 
   registerDynamicRoutes(routes)
 }

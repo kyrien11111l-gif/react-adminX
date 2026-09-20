@@ -1,10 +1,26 @@
-import { HOME_PATH } from "@/constants"
+import { LOGIN_PATH } from '@/router/config/constants'
 
 interface RedirectLocationState {
   from?: string
 }
 
-export function getSafeRedirectTarget(state: unknown, fallback = HOME_PATH): string {
+const REDIRECT_PARAM = 'redirect'
+
+function encodeRedirectTarget(target: string): string {
+  return encodeURIComponent(target).replaceAll('%2F', '/')
+}
+
+export function createLoginUrl(target: string): string {
+  return `${LOGIN_PATH}?${REDIRECT_PARAM}=${encodeRedirectTarget(target)}`
+}
+
+export function getRedirectTargetFromSearch(
+  search: string
+): string | undefined {
+  return new URLSearchParams(search).get(REDIRECT_PARAM) ?? undefined
+}
+
+export function getSafeRedirectTarget(state: unknown, fallback: string): string {
   if (typeof state !== 'object' || state === null || !('from' in state)) {
     return fallback
   }

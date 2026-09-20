@@ -4,6 +4,7 @@ import {
   useNavigate,
   useRouteError
 } from 'react-router-dom'
+import { usePermissionStore } from '@/stores'
 
 function getErrorDetails(error: unknown): {
   title: string
@@ -21,7 +22,7 @@ function getErrorDetails(error: unknown): {
   if (error instanceof Error) {
     return {
       title: '页面加载失败',
-      message: '页面暂时无法打开，请重试或返回工作台。',
+      message: '页面暂时无法打开，请重试或返回首页。',
       detail: import.meta.env.DEV ? error.message : undefined
     }
   }
@@ -32,6 +33,7 @@ function getErrorDetails(error: unknown): {
 export function RouteErrorPage() {
   const error = useRouteError()
   const navigate = useNavigate()
+  const homePath = usePermissionStore((state) => state.homePath)
   const details = getErrorDetails(error)
 
   return (
@@ -48,9 +50,11 @@ export function RouteErrorPage() {
           >
             重新加载
           </Button>,
-          <Button key="home" onClick={() => navigate('/dashboard')}>
-            返回工作台
-          </Button>
+          homePath ? (
+            <Button key="home" onClick={() => navigate(homePath)}>
+              返回首页
+            </Button>
+          ) : null
         ]}
       >
         {details.detail ? (

@@ -14,9 +14,9 @@ import type { MenuProps } from 'antd'
 import type { TabsProps } from 'antd'
 import { useEffect } from 'react'
 import { useLocation, useMatches, useNavigate } from 'react-router-dom'
-import { HOME_PATH } from '@/constants'
+import { FORBIDDEN_PATH } from '@/router/config/constants'
 import { isAppRouteHandle } from '@/router/routeHandle'
-import { useLayoutStore, useTabsStore } from '@/stores'
+import { useLayoutStore, usePermissionStore, useTabsStore } from '@/stores'
 
 const PAGE_TABS_CLASS_NAMES = {
   root: [
@@ -83,6 +83,7 @@ export function PageTabs() {
   const toggleContentMaximized = useLayoutStore(
     (state) => state.toggleContentMaximized
   )
+  const homePath = usePermissionStore((state) => state.homePath)
   useEffect(() => {
     const currentMatch = [...matches]
       .reverse()
@@ -95,16 +96,16 @@ export function PageTabs() {
     addTab({
       key: location.pathname,
       title,
-      closable: location.pathname !== HOME_PATH
+      closable: location.pathname !== homePath
     })
-  }, [addTab, location.pathname, matches])
+  }, [addTab, homePath, location.pathname, matches])
 
   const handleClose = (key: string) => {
     const index = tabs.findIndex((tab) => tab.key === key)
     const fallback = tabs[index - 1] ?? tabs[index + 1]
     closeTab(key)
     if (key === location.pathname) {
-      void navigate(fallback?.key ?? HOME_PATH)
+      void navigate(fallback?.key ?? homePath ?? FORBIDDEN_PATH)
     }
   }
 
@@ -130,7 +131,7 @@ export function PageTabs() {
       }
     } else if (action === 'close-all') {
       closeAllTabs()
-      void navigate(HOME_PATH)
+      void navigate(homePath ?? FORBIDDEN_PATH)
     }
   }
 

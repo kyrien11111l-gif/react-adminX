@@ -5,6 +5,11 @@ describe('tabs store', () => {
   beforeEach(() => {
     localStorage.clear()
     useTabsStore.getState().reset()
+    useTabsStore.getState().setHomeTab({
+      key: '/dashboard',
+      title: '工作台',
+      closable: false
+    })
   })
 
   it('persists all opened tabs', () => {

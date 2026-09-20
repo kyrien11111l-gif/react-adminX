@@ -5,20 +5,18 @@ import {
   useUserStore
 } from '@/stores'
 import type { NavigateFunction } from 'react-router-dom'
-import { LOGIN_PATH } from '@/router/config/constants'
-import { invalidateSessionInitialization } from '@/services/sessionInitialization'
+import { createLoginUrl } from '@/utils/navigation'
 import { showStartupLoading } from '@/utils/startupLoading'
 
 export function resetSession() {
-  invalidateSessionInitialization()
   useAuthStore.getState().clearToken()
   useUserStore.getState().reset()
   usePermissionStore.getState().reset()
   useTabsStore.getState().reset()
 }
 
-export function logoutToLogin(navigate: NavigateFunction) {
+export function logoutToLogin(navigate: NavigateFunction, target: string) {
   showStartupLoading()
   resetSession()
-  void navigate(LOGIN_PATH, { replace: true })
+  void navigate(createLoginUrl(target), { replace: true })
 }

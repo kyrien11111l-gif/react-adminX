@@ -1,10 +1,10 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { HOME_TAB } from '@/constants'
 import type { LayoutTab } from '@/types'
 
 interface TabsState {
   tabs: LayoutTab[]
+  setHomeTab: (tab: LayoutTab | null) => void
   addTab: (tab: LayoutTab) => void
   closeTab: (key: string) => void
   closeOtherTabs: (key: string) => void
@@ -16,7 +16,18 @@ interface TabsState {
 export const useTabsStore = create<TabsState>()(
   persist(
     (set) => ({
-      tabs: [HOME_TAB],
+      tabs: [],
+      setHomeTab: (homeTab) =>
+        set((state) => ({
+          tabs: homeTab
+            ? [
+                homeTab,
+                ...state.tabs.filter(
+                  (tab) => tab.closable && tab.key !== homeTab.key
+                )
+              ]
+            : []
+        })),
       addTab: (tab) =>
         set((state) => {
           const existing = state.tabs.find((item) => item.key === tab.key)
@@ -51,8 +62,11 @@ export const useTabsStore = create<TabsState>()(
             )
           }
         }),
-      closeAllTabs: () => set({ tabs: [HOME_TAB] }),
-      reset: () => set({ tabs: [HOME_TAB] })
+      closeAllTabs: () =>
+        set((state) => ({
+          tabs: state.tabs.filter((tab) => !tab.closable)
+        })),
+      reset: () => set({ tabs: [] })
     }),
     {
       name: 'admin-core-tabs',

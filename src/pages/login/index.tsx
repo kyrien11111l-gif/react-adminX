@@ -19,7 +19,7 @@ export default function LoginPage() {
     try {
       const result = await login(credentials)
       setToken(result.token)
-      void message.success('登录成功，正在加载工作台')
+      void message.success('登录成功，正在加载系统')
     } catch (error) {
       void message.error(
         isRequestError(error) ? error.message : '登录失败，请稍后重试'

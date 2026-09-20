@@ -140,15 +140,14 @@ VITE_WATERMARK_CONTENT=内部系统
 
 - /login：登录页
 - /whiteList：无需登录的白名单示例页
-- /dashboard：固定工作台
 - /403：无权限页
 - 未匹配路径：通配回退页，再由路由错误边界处理异常
 
-当前 Mock 菜单包括：
+工作台不再由前端固定注册，而是和其他业务菜单一样由 `/menus` 返回。当前 Mock 菜单包括：
 
 | 页面 | 路径 | 布局 | 权限 |
 | --- | --- | --- | --- |
-| 工作台 | /dashboard | 标准布局 | 无 |
+| 服务端工作台 | /dashboard | 标准布局 | 无 |
 | 用户管理 | /system/user | 标准布局 | system:user:list |
 | 角色管理 | /system/role | 标准布局 | system:role:list |
 | 审计记录 | /system/audit | 标准布局 | system:audit:list |
@@ -193,10 +192,10 @@ AuthGuard()
   ├─ 读取 useAuthStore.token
   ├─ 判断 /system/user 不是白名单
   ├─ 发现 token 不存在
-  └─ Navigate('/login', { state: { from: '/system/user' } })
+  └─ Navigate('/login?redirect=/system/user', { state: { from: '/system/user' } })
 ~~~
 
-原始地址会放到 `location.state.from`，登录成功后会优先回到这个地址。如果没有原始地址，则默认进入 `/dashboard`。
+原始地址同时放到登录 URL 的 `redirect` 参数和 `location.state.from`。因此登录页会显示 `/login?redirect=/system/user`，刷新登录页也不会丢失回跳地址。登录成功后会优先回到安全的站内地址，并通过 React Router 的 `Navigate` 更新浏览器 URL。如果没有原始地址，则使用初始化阶段从菜单和权限中计算出的首页；没有任何可访问页面时进入 `/403`。
 
 ### 三、登录页面提交账号密码
 
@@ -225,9 +224,9 @@ token 写入后，`AuthGuard` 会重新渲染。此时它发现当前有 token�
 AuthGuard.useEffect()
   └─ initializeSession()
       └─ Promise.all([
-           getUserInfo(signal),
-           getMenus(signal),
-           getPermissions(signal)
+           getUserInfo(),
+           getMenus(),
+           getPermissions()
          ])
 ~~~
 
@@ -247,14 +246,14 @@ Authorization: Bearer <token>
 
 请求成功后，`initializeSession()` 会：
 
-1. 通过 `withDashboardMenu()` 补充固定的工作台菜单。
+1. 按菜单 `rank`、`hidden`、外链和权限码，计算第一个可访问的叶子页面作为 `homePath`。
 2. 通过 `useUserStore.setUser()` 保存用户信息。
-3. 通过 `usePermissionStore.setData()` 保存菜单和权限码。
-4. 将 `initialized` 设置为 `true`。
+3. 通过 `usePermissionStore.setData()` 保存菜单、权限码和 `homePath`。
+4. 更新标签页固定首页，并保持 `initialized = false`，等待动态路由准备完成。
 
 文件：`src/services/sessionInitialization.ts`。
 
-该服务还负责合并并发初始化请求、取消退出登录前的请求，以及阻止旧请求回写新会话。
+该服务负责合并并发初始化请求。
 
 ### 五、菜单生成并注册动态路由
 
@@ -262,8 +261,7 @@ Authorization: Bearer <token>
 
 ~~~text
 registerDynamicMenuRoutes(menus)
-  ├─ getDynamicMenus(menus)
-  ├─ generateRoutes(dynamicMenus)
+  ├─ generateRoutes(menus)
   │   ├─ 递归遍历菜单树
   │   ├─ hasRouteComponent()
   │   ├─ loadComponent()
@@ -274,7 +272,6 @@ registerDynamicMenuRoutes(menus)
 
 职责分别是：
 
-- `src/router/config/menu.ts`：处理固定工作台和服务端菜单的合并。
 - `src/router/dynamic/generateRoutes.ts`：把菜单树转换为路由树。
 - `src/router/dynamic/componentLoader.ts`：根据菜单的 `component` 字段按需加载页面。
 - `src/router/dynamic/routeRegistry.ts`：统一调用 React Router 的 `patchRoutes()`。
@@ -287,7 +284,16 @@ rematchDynamicLocation(target)
   └─ router.navigate(target, { replace: true })
 ~~~
 
-这样首次直接打开动态地址时，不会先显示 404，再等待动态路由注册。
+这样首次直接打开动态地址时，不会先显示 404，再等待动态路由注册。打开根路径时，会改为匹配初始化结果中的 `homePath`；这个导航同样会更新浏览器地址栏。
+
+动态路由注册和地址重新匹配都成功后，`AuthGuard` 调用：
+
+~~~text
+usePermissionStore.markInitialized()
+  └─ initialized = true
+~~~
+
+此时才认为用户、菜单、权限和动态路由全部准备完成，允许渲染业务页面。
 
 ### 六、权限校验和页面渲染
 
@@ -295,6 +301,7 @@ rematchDynamicLocation(target)
 
 ~~~text
 AuthGuard()
+  ├─ initialized === true
   ├─ getRoutePermission(matches)
   ├─ hasPermission(permissionCode)
   ├─ 没有权限 → Navigate('/403')
@@ -327,10 +334,10 @@ token 会持久化到 localStorage，但用户、菜单和权限不会持久化�
 
 ~~~text
 UserMenu
-  └─ logoutToLogin(navigate)
+  └─ logoutToLogin(navigate, currentTarget)
       ├─ showStartupLoading()
       ├─ resetSession()
-      └─ navigate('/login', { replace: true })
+      └─ navigate('/login?redirect=<currentTarget>', { replace: true })
 ~~~
 
 `resetSession()` 会统一清理：
@@ -339,7 +346,6 @@ UserMenu
 - 用户信息
 - 菜单和权限
 - 已打开的标签页
-- 正在进行中的会话初始化请求
 
 接口返回 401 时，调用链是：
 
@@ -349,7 +355,7 @@ request()
       └─ AppRuntime 注册的 401 handler
           ├─ resetSession()
           ├─ 显示“登录状态已失效”提示
-          └─ navigate('/login')
+          └─ navigate('/login?redirect=<currentTarget>')
 ~~~
 
 `handleUnauthorizedOnce()` 会合并短时间内重复出现的 401，避免多个请求同时触发多次退出登录。
@@ -360,12 +366,13 @@ request()
 
 ~~~text
 initializeSession()
-  └─ usePermissionStore.setError(message)
-      └─ AuthGuard 显示“应用初始化失败”
-          └─ 点击“重试”
-              ├─ 清理初始化错误
-              ├─ reset permission store
-              └─ 重新执行 initializeSession()
+  └─ AuthGuard 捕获初始化错误
+      └─ usePermissionStore.setError(message)
+          └─ AuthGuard 显示“应用初始化失败”
+              └─ 点击“重试”
+                  ├─ 清理初始化错误
+                  ├─ reset permission store
+                  └─ 重新执行 initializeSession()
 ~~~
 
 页面文字修改时，正常情况下只会触发 Vite HMR 更新页面模块，不会重新执行上述登录链路。如果出现整个应用 Loading，通常说明发生了整页刷新、根布局重新挂载，或者存在循环依赖导致初始化流程被重新触发。

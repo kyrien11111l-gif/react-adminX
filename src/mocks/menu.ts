@@ -3,6 +3,19 @@ import { jsonResponse } from '@/mocks/auth'
 
 const mockMenus: Menu[] = [
   {
+    id: 'dashboard',
+    name: '工作台',
+    path: 'dashboard',
+    component: 'dashboard/index',
+    meta: {
+      title: '工作台',
+      icon: 'DashboardOutlined',
+      layout: 'default',
+      affix: true,
+      rank: 0
+    }
+  },
+  {
     id: 'system',
     name: '系统管理',
     path: 'system',

@@ -114,7 +114,7 @@ export default function DashboardPage() {
               type="info"
               showIcon
               title="架构状态"
-              description="固定工作台、动态业务路由和 PageLayout 相互独立，可继续扩展真实业务模块。"
+              description="工作台由服务端菜单提供，动态业务路由和 PageLayout 相互独立，可继续扩展真实业务模块。"
             />
           </Card>
         </Col>

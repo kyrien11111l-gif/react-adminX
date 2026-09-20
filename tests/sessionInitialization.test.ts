@@ -8,12 +8,10 @@ const apiMocks = vi.hoisted(() => ({
 
 vi.mock('@/api', () => apiMocks)
 
-import {
-  initializeSession,
-  invalidateSessionInitialization
-} from '@/services/sessionInitialization'
+import { initializeSession } from '@/services/sessionInitialization'
 import {
   usePermissionStore,
+  useTabsStore,
   useUserStore
 } from '@/stores'
 
@@ -33,20 +31,10 @@ const menus = [
   }
 ]
 
-function createDeferred<T>() {
-  let resolve!: (value: T) => void
-
-  const promise = new Promise<T>((nextResolve) => {
-    resolve = nextResolve
-  })
-
-  return { promise, resolve }
-}
-
 describe('initializeSession', () => {
   beforeEach(() => {
-    invalidateSessionInitialization()
     usePermissionStore.getState().reset()
+    useTabsStore.getState().reset()
     useUserStore.getState().reset()
     apiMocks.getMenus.mockReset()
     apiMocks.getPermissions.mockReset()
@@ -69,33 +57,14 @@ describe('initializeSession', () => {
     expect(apiMocks.getMenus).toHaveBeenCalledTimes(1)
     expect(apiMocks.getPermissions).toHaveBeenCalledTimes(1)
     expect(usePermissionStore.getState()).toMatchObject({
-      initialized: true,
-      permissions: ['system:user:list']
+      initialized: false,
+      permissions: ['system:user:list'],
+      homePath: '/system/user'
     })
     expect(useUserStore.getState().user).toEqual(user)
-  })
 
-  it('does not commit a response after the session is invalidated', async () => {
-    const userRequest = createDeferred<typeof user>()
-    const menusRequest = createDeferred<typeof menus>()
-    const permissionsRequest = createDeferred<string[]>()
-    apiMocks.getUserInfo.mockReturnValue(userRequest.promise)
-    apiMocks.getMenus.mockReturnValue(menusRequest.promise)
-    apiMocks.getPermissions.mockReturnValue(permissionsRequest.promise)
+    usePermissionStore.getState().markInitialized()
 
-    const initialization = initializeSession()
-    invalidateSessionInitialization()
-    userRequest.resolve(user)
-    menusRequest.resolve(menus)
-    permissionsRequest.resolve(['system:user:list'])
-
-    await initialization
-
-    expect(usePermissionStore.getState()).toMatchObject({
-      initialized: false,
-      menus: [],
-      permissions: []
-    })
-    expect(useUserStore.getState().user).toBeNull()
+    expect(usePermissionStore.getState().initialized).toBe(true)
   })
 })

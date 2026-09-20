@@ -4,9 +4,9 @@ import { useEffect } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { SIDEBAR_COLLAPSED_WIDTH } from '@/constants'
 import { router } from '@/router'
-import { LOGIN_PATH } from '@/router/config/constants'
 import { registerUnauthorizedHandler } from '@/services'
 import { useLayoutStore } from '@/stores'
+import { createLoginUrl } from '@/utils/navigation'
 import { resetSession } from '@/utils/session'
 
 function AppRuntime() {
@@ -55,7 +55,10 @@ function AppRuntime() {
           description: '请重新登录后继续操作。',
           duration: 3
         })
-        return router.navigate(LOGIN_PATH, { replace: true })
+        const { pathname, search, hash } = router.state.location
+        const target = `${pathname}${search}${hash}`
+
+        return router.navigate(createLoginUrl(target), { replace: true })
       }),
     [notification]
   )

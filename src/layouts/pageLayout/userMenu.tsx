@@ -1,13 +1,15 @@
 import { LogoutOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Button, Dropdown, Typography } from 'antd'
 import type { MenuProps } from 'antd'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useUserStore } from '@/stores'
 import { logoutToLogin } from '@/utils/session'
 
 export function UserMenu() {
   const user = useUserStore((state) => state.user)
+  const location = useLocation()
   const navigate = useNavigate()
+  const target = `${location.pathname}${location.search}${location.hash}`
   const items: MenuProps['items'] = [
     {
       key: 'profile',
@@ -21,7 +23,7 @@ export function UserMenu() {
       icon: <LogoutOutlined />,
       label: '退出登录',
       danger: true,
-      onClick: () => logoutToLogin(navigate)
+      onClick: () => logoutToLogin(navigate, target)
     }
   ]
 
