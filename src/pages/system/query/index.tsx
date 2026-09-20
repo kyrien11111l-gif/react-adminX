@@ -15,17 +15,14 @@ import type { TableColumnsType, TableProps } from 'antd'
 import { useCallback, useMemo, useState, type Key } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { queryData } from '@/api'
-import {
-  QueryForm,
-  AutoHeightTable,
-  EllipsisParagraph,
-  getTableHeaderSearchProps,
-  type QueryDateRangeValue,
-  type QueryFormField,
-  TableContainer,
-  TableToolbar,
-  type TableDensity
-} from '@/components'
+import { AutoHeightTable } from '@/components/autoHeightTable'
+import { EllipsisParagraph } from '@/components/ellipsisParagraph'
+import { QueryForm } from '@/components/queryForm'
+import type { QueryDateRangeValue, QueryFormField } from '@/components/queryForm'
+import { getTableHeaderSearchProps } from '@/components/tableHeaderSearch'
+import { TableContainer } from '@/components/tableContainer'
+import { TableToolbar } from '@/components/tableToolbar'
+import type { TableDensity } from '@/components/tableToolbar'
 import {
   useTableColumns,
   useTablePagination,

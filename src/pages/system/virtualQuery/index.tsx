@@ -10,16 +10,14 @@ import {
 import type { TableColumnsType, TableProps, TableRef } from 'antd'
 import { useCallback, useMemo, useRef, useState, type Key } from 'react'
 import { queryVirtualData } from '@/api'
-import {
-  EllipsisParagraph,
-  getTableHeaderSearchProps,
-  QueryForm,
-  TableContainer,
-  TableToolbar,
-  VirtualTable,
-  type QueryFormField,
-  type TableDensity
-} from '@/components'
+import { EllipsisParagraph } from '@/components/ellipsisParagraph'
+import { QueryForm } from '@/components/queryForm'
+import type { QueryFormField } from '@/components/queryForm'
+import { getTableHeaderSearchProps } from '@/components/tableHeaderSearch'
+import { TableContainer } from '@/components/tableContainer'
+import { TableToolbar } from '@/components/tableToolbar'
+import type { TableDensity } from '@/components/tableToolbar'
+import { VirtualTable } from '@/components/virtualTable'
 import { useTableColumns, useTablePagination, useTableQuery } from '@/hooks'
 import type {
   QueryCategory,

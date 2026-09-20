@@ -5,6 +5,8 @@ export const HOME_PATH = '/dashboard'
 export const SIDEBAR_WIDTH = 208
 export const SIDEBAR_COLLAPSED_WIDTH = 64
 export const MOBILE_SIDEBAR_WIDTH = 208
+export const PAGE_TABS_HEIGHT = 35
+export const HEADER_HEIGHT = 56
 
 export const SIDE_NAVIGATION = 'side-navigation'
 export const TOP_NAVIGATION = 'top-navigation'

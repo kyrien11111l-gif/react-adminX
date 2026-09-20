@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
-import { RootLayout } from '@/layouts'
+import { RootLayout } from '@/layouts/rootLayout'
 import { RouteErrorPage } from '@/pages/error/routeError'
 import { ROOT_ROUTE_ID } from '@/router/config/constants'
 import { startRouteProgress } from '@/router/routeProgress'

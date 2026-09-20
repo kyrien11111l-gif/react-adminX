@@ -1,39 +1,19 @@
 import { lazy } from 'react'
 import type { RouteObject } from 'react-router-dom'
-import { PageLayout } from '@/layouts'
+import { PageLayout } from '@/layouts/pageLayout'
 import { WHITE_LIST_TEST_ROUTE_PATH } from '@/router/config/constants'
-import type { Menu } from '@/types'
+import { DASHBOARD_MENU } from '@/router/config/menu'
+export {
+  DASHBOARD_MENU,
+  getDynamicMenus,
+  withDashboardMenu
+} from '@/router/config/menu'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const LoginPage = lazy(() => import('@/pages/login'))
 const WhiteListPage = lazy(() => import('@/pages/whiteList'))
 const ForbiddenPage = lazy(() => import('@/pages/error/403'))
 const NotFoundPage = lazy(() => import('@/pages/error/404'))
-
-export const DASHBOARD_MENU: Menu = {
-  id: 'dashboard',
-  name: 'Dashboard',
-  path: 'dashboard',
-  meta: {
-    title: '工作台',
-    icon: 'DashboardOutlined',
-    layout: 'default',
-    affix: true,
-    rank: 0
-  }
-}
-
-function isDashboardMenu(menu: Menu): boolean {
-  return menu.id === DASHBOARD_MENU.id || menu.path === DASHBOARD_MENU.path
-}
-
-export function withDashboardMenu(menus: Menu[]): Menu[] {
-  return [DASHBOARD_MENU, ...menus.filter((menu) => !isDashboardMenu(menu))]
-}
-
-export function getDynamicMenus(menus: Menu[]): Menu[] {
-  return menus.filter((menu) => !isDashboardMenu(menu))
-}
 
 export const baseRoutes: RouteObject[] = [
   // {

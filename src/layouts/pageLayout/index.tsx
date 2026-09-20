@@ -38,7 +38,6 @@ export function PageLayout() {
   const { token } = theme.useToken()
 
   useEffect(() => {
-    console.log('PageLayout mounted')
     if (typeof window.matchMedia !== 'function') {
       return
     }

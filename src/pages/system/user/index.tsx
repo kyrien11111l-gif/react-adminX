@@ -6,7 +6,7 @@ import {
 import { App, Button, Card, Flex, Input, Space, Table, Tag, Typography } from 'antd'
 import type { TableColumnsType } from 'antd'
 import { useMemo, useState } from 'react'
-import { Permission } from '@/components'
+import { Permission } from '@/components/permission'
 
 interface UserRow {
   id: number

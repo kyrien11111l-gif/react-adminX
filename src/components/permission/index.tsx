@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { usePermissionStore } from '@/stores'
+import { usePermissionStore } from '@/stores/permission'
 
 interface PermissionProps {
   code: string

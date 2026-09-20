@@ -112,10 +112,10 @@ VITE_WATERMARK_CONTENT=内部系统
 │   ├── mocks/             # Mock fetch、响应和演示数据
 │   ├── pages/             # 登录、工作台、业务页和错误页
 │   ├── router/
-│   │   ├── config/        # 固定路由、白名单和路由常量
-│   │   ├── dynamic/       # 菜单转路由和动态路由注册
+│   │   ├── config/        # 固定路由、菜单配置、白名单和路由常量
+│   │   ├── dynamic/       # 菜单转路由、按需加载和动态路由注册
 │   │   └── guards/        # AuthGuard
-│   ├── services/          # 通用请求和 401 处理
+│   ├── services/          # 请求、会话初始化和 401 处理
 │   ├── stores/            # auth、user、permission、layout、tabs
 │   ├── styles/            # 全局样式
 │   ├── types/             # 共享类型
@@ -155,6 +155,220 @@ VITE_WATERMARK_CONTENT=内部系统
 | 全屏页面 | /fullscreen | fullpage | 无 |
 
 演示权限只包含 system:user:list 和 system:role:list，因此审计记录菜单可以显示，但访问时会进入 /403，用于演示权限控制。
+
+## 用户登录与权限链路
+
+可以把这套流程理解成进入办公楼：token 是门禁卡，用户信息用于确认“是谁”，菜单决定“能看到哪些入口”，权限码决定“能不能真正进入某个页面”，AuthGuard 是每次进入系统时的门卫。
+
+### 一、应用启动
+
+浏览器打开应用后，调用顺序是：
+
+~~~text
+src/main.tsx
+  └─ showStartupLoading()
+  └─ render(<App />)
+      └─ AppRuntime()
+          ├─ 注册 401 失效处理器
+          └─ RouterProvider
+              └─ RootLayout
+                  └─ AuthGuard
+                      └─ RouteReady
+                          └─ Outlet
+~~~
+
+相关代码：
+
+- `src/main.tsx`：创建 React 应用并显示启动 Loading。
+- `src/app.tsx`：配置 Ant Design、RouterProvider，并注册统一的 401 处理器。
+- `src/router/index.ts`：创建浏览器路由，并通过 `bindRouter()` 保存路由实例。
+- `src/layouts/rootLayout/index.tsx`：提供根布局、鉴权守卫和页面出口。
+
+### 二、没有 token 时访问业务页面
+
+例如直接访问 `/system/user`：
+
+~~~text
+AuthGuard()
+  ├─ 读取 useAuthStore.token
+  ├─ 判断 /system/user 不是白名单
+  ├─ 发现 token 不存在
+  └─ Navigate('/login', { state: { from: '/system/user' } })
+~~~
+
+原始地址会放到 `location.state.from`，登录成功后会优先回到这个地址。如果没有原始地址，则默认进入 `/dashboard`。
+
+### 三、登录页面提交账号密码
+
+登录页位于 `src/pages/login/index.tsx`，表单提交后的调用链是：
+
+~~~text
+LoginPage.handleSubmit(credentials)
+  └─ api.login(credentials)
+      └─ api/auth.ts: login()
+          └─ request.post('/login')
+              └─ services/request.ts: request()
+                  ├─ 调用 Mock fetch 或真实 fetch
+                  ├─ 解析统一响应
+                  └─ 返回 { token }
+  └─ useAuthStore.setToken(token)
+      └─ Zustand persist 写入 localStorage
+~~~
+
+登录接口是 `POST /login`，登录失败时只显示错误消息，不会写入 token，也不会开始权限初始化。
+
+### 四、登录成功后加载会话
+
+token 写入后，`AuthGuard` 会重新渲染。此时它发现当前有 token，但用户、菜单和权限还没有初始化，于是调用：
+
+~~~text
+AuthGuard.useEffect()
+  └─ initializeSession()
+      └─ Promise.all([
+           getUserInfo(signal),
+           getMenus(signal),
+           getPermissions(signal)
+         ])
+~~~
+
+三个接口会并行请求：
+
+| 函数 | 接口 | 作用 |
+| --- | --- | --- |
+| `getUserInfo()` | `GET /user/info` | 获取当前登录用户 |
+| `getMenus()` | `GET /menus` | 获取服务端菜单树 |
+| `getPermissions()` | `GET /permissions` | 获取权限码数组 |
+
+它们最终都会进入 `src/services/request.ts`。请求层会自动读取 `useAuthStore` 中的 token，并添加：
+
+~~~text
+Authorization: Bearer <token>
+~~~
+
+请求成功后，`initializeSession()` 会：
+
+1. 通过 `withDashboardMenu()` 补充固定的工作台菜单。
+2. 通过 `useUserStore.setUser()` 保存用户信息。
+3. 通过 `usePermissionStore.setData()` 保存菜单和权限码。
+4. 将 `initialized` 设置为 `true`。
+
+文件：`src/services/sessionInitialization.ts`。
+
+该服务还负责合并并发初始化请求、取消退出登录前的请求，以及阻止旧请求回写新会话。
+
+### 五、菜单生成并注册动态路由
+
+会话数据准备完成后，`AuthGuard` 继续调用：
+
+~~~text
+registerDynamicMenuRoutes(menus)
+  ├─ getDynamicMenus(menus)
+  ├─ generateRoutes(dynamicMenus)
+  │   ├─ 递归遍历菜单树
+  │   ├─ hasRouteComponent()
+  │   ├─ loadComponent()
+  │   └─ 生成 React Router RouteObject
+  └─ registerDynamicRoutes(routes)
+      └─ router.patchRoutes('root', routes)
+~~~
+
+职责分别是：
+
+- `src/router/config/menu.ts`：处理固定工作台和服务端菜单的合并。
+- `src/router/dynamic/generateRoutes.ts`：把菜单树转换为路由树。
+- `src/router/dynamic/componentLoader.ts`：根据菜单的 `component` 字段按需加载页面。
+- `src/router/dynamic/routeRegistry.ts`：统一调用 React Router 的 `patchRoutes()`。
+- `src/router/dynamic/routeBootstrap.ts`：串起菜单过滤、路由生成和路由注册。
+
+动态路由注册后，业务页面还会调用：
+
+~~~text
+rematchDynamicLocation(target)
+  └─ router.navigate(target, { replace: true })
+~~~
+
+这样首次直接打开动态地址时，不会先显示 404，再等待动态路由注册。
+
+### 六、权限校验和页面渲染
+
+动态路由准备完成后，`AuthGuard` 才允许业务页面渲染：
+
+~~~text
+AuthGuard()
+  ├─ getRoutePermission(matches)
+  ├─ hasPermission(permissionCode)
+  ├─ 没有权限 → Navigate('/403')
+  └─ 有权限 → 渲染 children / Outlet
+      └─ RouteReady()
+          ├─ hideStartupLoading()
+          └─ finishRouteProgress()
+~~~
+
+路由没有设置 `meta.permission` 时默认允许访问；设置了权限码时，必须出现在 `/permissions` 返回的权限数组中。
+
+### 七、刷新浏览器时会发生什么
+
+token 会持久化到 localStorage，但用户、菜单和权限不会持久化。因此刷新页面后：
+
+~~~text
+读取持久化 token
+  → AuthGuard 发现有 token
+  → 重新请求用户、菜单和权限
+  → 重新生成动态路由
+  → 重新匹配当前地址
+  → 渲染页面
+~~~
+
+这样可以避免使用过期的菜单和权限数据。
+
+### 八、退出登录和 401 失效
+
+手动退出登录的调用链：
+
+~~~text
+UserMenu
+  └─ logoutToLogin(navigate)
+      ├─ showStartupLoading()
+      ├─ resetSession()
+      └─ navigate('/login', { replace: true })
+~~~
+
+`resetSession()` 会统一清理：
+
+- token
+- 用户信息
+- 菜单和权限
+- 已打开的标签页
+- 正在进行中的会话初始化请求
+
+接口返回 401 时，调用链是：
+
+~~~text
+request()
+  └─ handleUnauthorizedOnce()
+      └─ AppRuntime 注册的 401 handler
+          ├─ resetSession()
+          ├─ 显示“登录状态已失效”提示
+          └─ navigate('/login')
+~~~
+
+`handleUnauthorizedOnce()` 会合并短时间内重复出现的 401，避免多个请求同时触发多次退出登录。
+
+### 九、初始化失败时如何恢复
+
+用户、菜单或权限接口发生非 401 错误时：
+
+~~~text
+initializeSession()
+  └─ usePermissionStore.setError(message)
+      └─ AuthGuard 显示“应用初始化失败”
+          └─ 点击“重试”
+              ├─ 清理初始化错误
+              ├─ reset permission store
+              └─ 重新执行 initializeSession()
+~~~
+
+页面文字修改时，正常情况下只会触发 Vite HMR 更新页面模块，不会重新执行上述登录链路。如果出现整个应用 Loading，通常说明发生了整页刷新、根布局重新挂载，或者存在循环依赖导致初始化流程被重新触发。
 
 ## 新增动态页面
 

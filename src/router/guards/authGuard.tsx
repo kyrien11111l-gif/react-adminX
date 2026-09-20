@@ -1,6 +1,6 @@
 import { Button, Result } from 'antd'
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Navigate,
   useLocation,
@@ -11,13 +11,14 @@ import {
   FORBIDDEN_PATH,
   LOGIN_PATH
 } from '@/router/config/constants'
+import { registerDynamicMenuRoutes } from '@/router/dynamic/routeBootstrap'
 import { rematchDynamicLocation } from '@/router/dynamic/routeRegistry'
 import { isWhiteRoute } from '@/router/config/whiteList'
 import { isAppRouteHandle } from '@/router/routeHandle'
-import {
-  useAuthStore,
-  usePermissionStore
-} from '@/stores'
+import { initializeSession } from '@/services/sessionInitialization'
+import { useAuthStore } from '@/stores/auth'
+import { usePermissionStore } from '@/stores/permission'
+import type { Menu } from '@/types/menu'
 import { getSafeRedirectTarget } from '@/utils/navigation'
 import { hasPermission } from '@/utils/permission'
 import {
@@ -27,6 +28,11 @@ import {
 
 interface AuthGuardProps {
   children: ReactNode
+}
+
+interface RouteErrorState {
+  menus: Menu[]
+  message: string
 }
 
 /**
@@ -42,6 +48,12 @@ function getRoutePermission(
     .find(isAppRouteHandle)?.permission
 }
 
+function getRouteInitializationError(error: unknown): string {
+  return error instanceof Error
+    ? error.message
+    : '动态路由初始化失败，请稍后重试'
+}
+
 /**
  * 根布局下所有路由共用的全局鉴权守卫。
  *
@@ -49,13 +61,14 @@ function getRoutePermission(
  * 1. 先区分登录页、其他白名单页和需要登录的业务页面。
  * 2. 未携带 token 访问业务页时，跳转登录页，并将原始地址写入 state.from。
  * 3. token 只表示浏览器保存了凭证，不能证明会话有效；访问业务页或登录页时，
- *    都必须调用 initialize 请求用户、菜单和权限，由服务端验证 token。
- * 4. 初始化成功后，权限仓库注册动态路由并写入 initialized；业务页重新匹配原始地址，
+ *    都必须加载用户、菜单和权限，由服务端验证 token。
+ * 4. 会话数据加载成功后，鉴权守卫注册动态路由并重新匹配原始地址，
+ *    路由准备完成后才允许渲染业务页。
  *    登录页则根据 state.from 跳转目标页。
  * 5. 初始化接口返回 401 时，请求层会统一清空会话并回到登录页；因此不会因为伪造 token
  *    进入业务页面。
  * 6. 已完成初始化后，再根据路由 handle 中的权限码判断是否允许访问；无权限跳转 403。
- * 7. 初始化发生非 401 错误时，业务页显示重试页；点击重试重置初始化状态，再执行第 3 步。
+ * 7. 会话或动态路由初始化发生非 401 错误时，业务页显示重试页；点击重试重置初始化状态，再执行第 3 步。
  */
 export function AuthGuard({ children }: AuthGuardProps) {
   const location = useLocation()
@@ -63,8 +76,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const token = useAuthStore((state) => state.token)
   const initialized = usePermissionStore((state) => state.initialized)
   const error = usePermissionStore((state) => state.error)
-  const initialize = usePermissionStore((state) => state.initialize)
+  const menus = usePermissionStore((state) => state.menus)
   const reset = usePermissionStore((state) => state.reset)
+  const [routesReadyMenus, setRoutesReadyMenus] = useState(() =>
+    initialized ? menus : null
+  )
+  const [routeErrorState, setRouteErrorState] =
+    useState<RouteErrorState | null>(null)
+  const routeError =
+    routeErrorState?.menus === menus ? routeErrorState.message : null
+  const routesReady = initialized && routesReadyMenus === menus
 
   // 当前完整地址：未登录跳转时用于回跳，动态路由注册后也据此重新匹配。
   const target = `${location.pathname}${location.search}${location.hash}`
@@ -90,53 +111,78 @@ export function AuthGuard({ children }: AuthGuardProps) {
    * 是否需要向服务端验证当前 token。
    * 其他白名单页不触发初始化；登录页有 token 时必须验证，不能直接跳转首页。
    */
-  const shouldInitialize =
+  const shouldPrepareRoutes =
     Boolean(token) &&
-    !initialized &&
     !error &&
-    (requiresAuthentication || isLoginRoute)
+    !routeError &&
+    (requiresAuthentication || isLoginRoute) &&
+    (!initialized || !routesReady)
 
   /**
-   * 第 3、4 步：请求用户、菜单和权限，并注册动态路由。
-   * 业务页完成后重匹配原始地址；登录页由下方 Navigate 负责跳转。
+   * 第 3、4 步：加载会话数据，注册动态路由并重匹配当前地址。
+   * 登录页由下方 Navigate 负责跳转。
    */
   useEffect(() => {
-    if (!shouldInitialize) {
+    if (!shouldPrepareRoutes) {
       return
     }
 
-    void initialize()
-      .then(() => {
-        if (!isLoginRoute) {
-          return rematchDynamicLocation(restoredTarget)
+    let cancelled = false
+
+    void initializeSession()
+      .then(({ menus }) => {
+        if (cancelled) {
+          return
+        }
+
+        registerDynamicMenuRoutes(menus)
+
+        if (isLoginRoute) {
+          setRoutesReadyMenus(menus)
+          return
+        }
+
+        return rematchDynamicLocation(restoredTarget).then(() => {
+          if (!cancelled) {
+            setRoutesReadyMenus(menus)
+          }
+        })
+      })
+      .catch((initializationError: unknown) => {
+        if (!cancelled && token) {
+          setRouteErrorState({
+            menus,
+            message: getRouteInitializationError(initializationError)
+          })
         }
       })
-      .catch(() => {
-        // 权限仓库已记录错误信息，下面的业务页分支会显示重试页面。
-      })
-  }, [
-    initialize,
-    isLoginRoute,
-    restoredTarget,
-    shouldInitialize
-  ])
+    return () => {
+      cancelled = true
+    }
+  }, [isLoginRoute, menus, restoredTarget, shouldPrepareRoutes, token])
 
-  /** 第 3 步进行中显示启动加载层，避免展示尚未完成匹配的动态路由。 */
+  /** 会话和动态路由准备期间显示启动加载层。 */
   useEffect(() => {
-    if (shouldInitialize) {
+    if (shouldPrepareRoutes) {
       showStartupLoading()
     }
-  }, [shouldInitialize])
+  }, [shouldPrepareRoutes])
 
   useEffect(() => {
-    if (error) {
+    if (error || routeError) {
       hideStartupLoading()
     }
-  }, [error])
+  }, [error, routeError])
+
+  function handleRetry() {
+    setRouteErrorState(null)
+    setRoutesReadyMenus(null)
+    reset()
+  }
 
   // 登录页：只有“存在 token 且已通过服务端初始化验证”才允许进入目标页。
   if (isLoginRoute) {
-    if (token && initialized) {
+    if (token && initialized && routesReady && !routeError) {
       return <Navigate to={redirectTarget} replace />
     }
 
@@ -153,16 +199,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return <Navigate to={LOGIN_PATH} replace state={{ from: target }} />
   }
 
-  // 第 7 步：初始化失败时提供重试入口，reset 后由上方副作用重新发起初始化。
-  if (error) {
+  // 第 7 步：会话或动态路由初始化失败时提供重试入口。
+  const initializationError = error ?? routeError
+
+  if (initializationError) {
     return (
       <main className="flex min-h-dvh items-center justify-center p-6">
         <Result
           status="error"
           title="应用初始化失败"
-          subTitle={error}
+          subTitle={initializationError}
           extra={
-            <Button type="primary" onClick={reset}>
+            <Button type="primary" onClick={handleRetry}>
               重试
             </Button>
           }
@@ -172,7 +220,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // 第 3 步尚未结束前不渲染业务 Outlet，防止先命中 404 再跳转目标动态路由。
-  if (!initialized) {
+  if (!initialized || !routesReady) {
     return null
   }
 

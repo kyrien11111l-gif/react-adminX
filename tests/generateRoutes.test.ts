@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { Iframe } from '@/components'
-import { PageLayout } from '@/layouts'
+import { Iframe } from '@/components/iframe'
+import { PageLayout } from '@/layouts/pageLayout'
 import {
   ComponentNotFoundPage,
   generateRoutes,

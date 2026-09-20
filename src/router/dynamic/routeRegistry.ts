@@ -27,7 +27,6 @@ export function bindRouter(router: AppRouter) {
  * Registers the latest backend routes below the root route anchor.
  */
 export function registerDynamicRoutes(routes: RouteObject[]) {
-  console.log('Registering dynamic routes:', routes)
   getRouter().patchRoutes(ROOT_ROUTE_ID, routes)
 }
 

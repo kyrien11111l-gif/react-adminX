@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { SIDE_NAVIGATION } from '@/constants'
+import { HEADER_HEIGHT, PAGE_TABS_HEIGHT, SIDE_NAVIGATION } from '@/constants'
 import type { NavigationStyle, ThemeMode } from '@/types'
 
 const DEFAULT_WATERMARK_ENABLED =
@@ -45,8 +45,8 @@ export const useLayoutStore = create<LayoutState>()(
       navigationStyle: SIDE_NAVIGATION,
       watermarkEnabled: DEFAULT_WATERMARK_ENABLED,
       watermarkContent: DEFAULT_WATERMARK_CONTENT,
-      headerHeight: 56,
-      pageTabsHeight: 35,
+      headerHeight: HEADER_HEIGHT,
+      pageTabsHeight: PAGE_TABS_HEIGHT,
       setThemeMode: (themeMode) =>
         set((state) => ({
           themeMode,
