@@ -1,8 +1,14 @@
 import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
-import { Button, Layout, Menu as AntMenu, theme } from 'antd'
+import {
+  Button,
+  ConfigProvider,
+  Layout,
+  Menu as AntMenu,
+  theme
+} from 'antd'
 import type { MenuProps } from 'antd'
 import SimpleBar from 'simplebar-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   SIDEBAR_COLLAPSED_WIDTH,
@@ -10,6 +16,7 @@ import {
 } from '@/constants'
 import { useLayoutStore, usePermissionStore } from '@/stores'
 import { BrandLogo } from '@/layouts/pageLayout/brandLogo'
+import { useMenuSelectedKeys } from '@/layouts/pageLayout/useMenuSelectedKeys'
 import type { Menu } from '@/types'
 import {
   buildMenuItems,
@@ -93,34 +100,9 @@ export function TwoColumnNavigation({
     openState.pathname === location.pathname
       ? openState.keys
       : (currentSecondColumnMenu?.ancestors ?? [])
-  const routeSelectedSecondColumnKeys = useMemo(
-    () =>
-      currentSecondColumnMenu
-        ? [
-            ...currentSecondColumnMenu.ancestors,
-            currentSecondColumnMenu.key
-          ]
-        : [],
-    [currentSecondColumnMenu]
+  const selectedSecondColumnKeys = useMenuSelectedKeys(
+    currentSecondColumnMenu
   )
-  // rc-menu registers nested paths after rendering; update the controlled
-  // selection in a microtask so parent submenus receive their selected state.
-  const [selectedSecondColumnKeys, setSelectedSecondColumnKeys] = useState(
-    routeSelectedSecondColumnKeys
-  )
-  useEffect(() => {
-    let active = true
-
-    queueMicrotask(() => {
-      if (active) {
-        setSelectedSecondColumnKeys(routeSelectedSecondColumnKeys)
-      }
-    })
-
-    return () => {
-      active = false
-    }
-  }, [routeSelectedSecondColumnKeys])
   const secondColumnWidth = secondColumnMenus.length
     ? collapsed
       ? SIDEBAR_COLLAPSED_WIDTH
@@ -194,15 +176,26 @@ export function TwoColumnNavigation({
           <BrandLogo collapsed />
           <nav className="min-h-0 flex-1" aria-label="一级导航菜单">
             <SimpleBar className="h-full">
-              <AntMenu
-                mode="inline"
-                theme="light"
-                inlineCollapsed
-                items={firstColumnItems}
-                selectedKeys={activeTopKey ? [activeTopKey] : []}
-                onClick={handleFirstColumnClick}
-                className="border-e-0! !bg-[var(--ant-color-bg-container)] px-2"
-              />
+              <ConfigProvider
+                theme={{
+                  components: {
+                    Menu: {
+                      itemSelectedBg: 'var(--ant-color-bg-container)',
+                      itemSelectedColor: 'var(--ant-color-primary)'
+                    }
+                  }
+                }}
+              >
+                <AntMenu
+                  mode="inline"
+                  theme="light"
+                  inlineCollapsed
+                  items={firstColumnItems}
+                  selectedKeys={activeTopKey ? [activeTopKey] : []}
+                  onClick={handleFirstColumnClick}
+                  className="border-e-0! !bg-[var(--ant-color-bg-container)] px-2"
+                />
+              </ConfigProvider>
             </SimpleBar>
           </nav>
         </div>

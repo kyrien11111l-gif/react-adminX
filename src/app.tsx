@@ -117,10 +117,10 @@ export function App() {
             : {},
           Menu: {
             collapsedWidth: SIDEBAR_COLLAPSED_WIDTH,
-            horizontalItemHoverColor: lightNavigationToken.colorPrimary,
+            horizontalItemHoverColor: 'var(--ant-color-text)',
             horizontalItemSelectedColor: lightNavigationToken.colorPrimary,
             itemBg: 'var(--ant-color-bg-container)',
-            itemHoverColor: lightNavigationToken.colorPrimary,
+            itemHoverColor: 'var(--ant-color-text)',
             itemSelectedBg: lightNavigationToken.colorPrimaryBg,
             itemSelectedColor: lightNavigationToken.colorPrimary,
             popupBg: 'var(--ant-color-bg-container)',

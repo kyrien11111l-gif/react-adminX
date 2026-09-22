@@ -2,13 +2,14 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
 import { Button, Menu as AntMenu, Layout, theme } from 'antd'
 import type { MenuProps } from 'antd'
 import SimpleBar from 'simplebar-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   SIDEBAR_COLLAPSED_WIDTH,
   SIDEBAR_WIDTH
 } from '@/constants'
 import { useLayoutStore, usePermissionStore } from '@/stores'
+import { useMenuSelectedKeys } from '@/layouts/pageLayout/useMenuSelectedKeys'
 import type { Menu } from '@/types'
 import {
   buildMenuItems,
@@ -53,29 +54,7 @@ export function Sidebar({
     () => matchCurrentMenu(location.pathname, pathEntries),
     [location.pathname, pathEntries]
   )
-  const routeSelectedKeys = useMemo(
-    () =>
-      currentMenu
-        ? [...currentMenu.ancestors, currentMenu.key]
-        : [],
-    [currentMenu]
-  )
-  // rc-menu registers nested paths after rendering; update the controlled
-  // selection in a microtask so parent submenus receive their selected state.
-  const [selectedKeys, setSelectedKeys] = useState(routeSelectedKeys)
-  useEffect(() => {
-    let active = true
-
-    queueMicrotask(() => {
-      if (active) {
-        setSelectedKeys(routeSelectedKeys)
-      }
-    })
-
-    return () => {
-      active = false
-    }
-  }, [routeSelectedKeys])
+  const selectedKeys = useMenuSelectedKeys(currentMenu)
   const [openState, setOpenState] = useState<{
     pathname: string
     keys: string[]

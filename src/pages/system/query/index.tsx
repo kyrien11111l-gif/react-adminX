@@ -356,28 +356,28 @@ export default function QueryPage() {
           <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
         )
       },
-      {
-        key: 'source',
-        title: '提交来源',
-        dataIndex: 'source',
-        width: 130,
-        align: 'center',
-        render: (source: QuerySource) => sourceLabels[source]
-      },
-      {
-        key: 'updatedAt',
-        title: '更新时间',
-        dataIndex: 'updatedAt',
-        align: 'center',
-        width: 180
-      },
-      {
-        key: 'duration',
-        title: '处理耗时',
-        dataIndex: 'duration',
-        align: 'center',
-        width: 160
-      },
+      // {
+      //   key: 'source',
+      //   title: '提交来源',
+      //   dataIndex: 'source',
+      //   width: 130,
+      //   align: 'center',
+      //   render: (source: QuerySource) => sourceLabels[source]
+      // },
+      // {
+      //   key: 'updatedAt',
+      //   title: '更新时间',
+      //   dataIndex: 'updatedAt',
+      //   align: 'center',
+      //   width: 180
+      // },
+      // {
+      //   key: 'duration',
+      //   title: '处理耗时',
+      //   dataIndex: 'duration',
+      //   align: 'center',
+      //   width: 160
+      // },
       {
         key: 'actions',
         title: '操作',
