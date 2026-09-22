@@ -1,6 +1,6 @@
 import { App as AntApp, ConfigProvider, theme, Watermark } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { SIDEBAR_COLLAPSED_WIDTH } from '@/constants'
 import { router } from '@/router'
@@ -83,6 +83,16 @@ export function App() {
   const themeColorPrimary = useLayoutStore(
     (state) => state.themeColorPrimary
   )
+  const lightNavigationToken = useMemo(
+    () =>
+      theme.getDesignToken({
+        algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: themeColorPrimary
+        }
+      }),
+    [themeColorPrimary]
+  )
 
   return (
     <ConfigProvider
@@ -107,10 +117,15 @@ export function App() {
             : {},
           Menu: {
             collapsedWidth: SIDEBAR_COLLAPSED_WIDTH,
+            horizontalItemHoverColor: lightNavigationToken.colorPrimary,
+            horizontalItemSelectedColor: lightNavigationToken.colorPrimary,
+            itemBg: 'var(--ant-color-bg-container)',
+            itemHoverColor: lightNavigationToken.colorPrimary,
+            itemSelectedBg: lightNavigationToken.colorPrimaryBg,
+            itemSelectedColor: lightNavigationToken.colorPrimary,
+            popupBg: 'var(--ant-color-bg-container)',
             subMenuItemBg: 'var(--ant-color-bg-container)',
-            darkItemBg: 'var(--ant-color-bg-container)',
-            darkPopupBg: 'var(--ant-color-bg-container)',
-            darkSubMenuItemBg: 'var(--ant-color-bg-container)'
+            subMenuItemSelectedColor: lightNavigationToken.colorPrimary
           },
           Table: {
             headerBorderRadius: 4

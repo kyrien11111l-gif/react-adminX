@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env VITE_WATERMARK_ENABLED=true vite",
     "build": "tsc -b && vite build",
+    "build:watermark": "tsc -b && cross-env VITE_WATERMARK_ENABLED=true vite build",
     "lint": "eslint . --max-warnings 0",
     "lint:antd": "antd lint ./src --version 6.6.1 --format json",
     "test": "vitest run",
@@ -31,6 +32,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.4",
+    "cross-env": "^10.1.0",
     "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",

@@ -33,7 +33,6 @@ export function TwoColumnNavigation({
   menus = emptyMenus
 }: TwoColumnNavigationProps) {
   const storeMenus = usePermissionStore((state) => state.menus)
-  const darkMode = useLayoutStore((state) => state.darkMode)
   const collapsed = useLayoutStore((state) => state.collapsed)
   const toggleCollapsed = useLayoutStore((state) => state.toggleCollapsed)
   const location = useLocation()
@@ -172,7 +171,7 @@ export function TwoColumnNavigation({
       collapsedWidth={totalWidth}
       collapsed={false}
       trigger={null}
-      theme={darkMode ? 'dark' : 'light'}
+      theme="light"
       aria-label="双列导航"
       className="sticky top-0 h-dvh overflow-hidden !bg-[var(--ant-color-bg-container)] !transition-[flex,max-width,min-width,width] max-[991px]:hidden"
       styles={{
@@ -197,7 +196,7 @@ export function TwoColumnNavigation({
             <SimpleBar className="h-full">
               <AntMenu
                 mode="inline"
-                theme={darkMode ? 'dark' : 'light'}
+                theme="light"
                 inlineCollapsed
                 items={firstColumnItems}
                 selectedKeys={activeTopKey ? [activeTopKey] : []}
@@ -217,7 +216,7 @@ export function TwoColumnNavigation({
               <SimpleBar className="h-full">
                 <div className="py-2">
                   <AntMenu
-                    theme={darkMode ? 'dark' : 'light'}
+                    theme="light"
                     mode="inline"
                     inlineCollapsed={collapsed}
                     items={secondColumnItems}

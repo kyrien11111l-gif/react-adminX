@@ -43,10 +43,11 @@ export function Header({ onOpenMobileMenu, navigation }: HeaderProps) {
 
   return (
     <Layout.Header
-      className="box-border w-full min-w-0 shrink-0 [&.ant-layout-header]:flex [&.ant-layout-header]:flex-nowrap [&.ant-layout-header]:items-center [&.ant-layout-header]:justify-between [&.ant-layout-header]:!px-4 [&.ant-layout-header]:leading-normal"
+      className="box-border w-full min-w-0 shrink-0 [&.ant-layout-header]:flex [&.ant-layout-header]:flex-nowrap [&.ant-layout-header]:items-center [&.ant-layout-header]:justify-between [&.ant-layout-header]:!px-4"
       style={{
         background: token.colorBgContainer,
-        height: headerHeight
+        height: headerHeight,
+        lineHeight: `${headerHeight}px`
       }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">

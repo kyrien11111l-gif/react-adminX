@@ -36,7 +36,6 @@ export function Sidebar({
   showBrand = true
 }: SidebarProps) {
   const storeMenus = usePermissionStore((state) => state.menus)
-  const darkMode = useLayoutStore((state) => state.darkMode)
   const toggleCollapsed = useLayoutStore((state) => state.toggleCollapsed)
   const location = useLocation()
   const navigate = useNavigate()
@@ -115,7 +114,7 @@ export function Sidebar({
       collapsedWidth={SIDEBAR_COLLAPSED_WIDTH}
       collapsed={mobile ? false : collapsed}
       trigger={null}
-      theme={darkMode ? 'dark' : 'light'}
+      theme="light"
       aria-label="侧边导航"
       styles={{
         root: {
@@ -137,7 +136,7 @@ export function Sidebar({
         <SimpleBar className="h-full">
           <div className="py-2">
             <AntMenu
-              theme={darkMode ? 'dark' : 'light'}
+              theme="light"
               mode="inline"
               inlineCollapsed={mobile ? false : collapsed}
               items={items}
@@ -151,7 +150,7 @@ export function Sidebar({
                 setOpenState({ pathname: location.pathname, keys })
               }}
               onClick={handleMenuClick}
-              className="border-e-0! !bg-[var(--ant-color-bg-container)] px-2"
+              className="border-e-0! px-2"
             />
           </div>
         </SimpleBar>

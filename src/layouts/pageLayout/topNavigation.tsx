@@ -30,7 +30,7 @@ export function TopNavigation({
   topLevelOnly = false
 }: TopNavigationProps) {
   const storeMenus = usePermissionStore((state) => state.menus)
-  const darkMode = useLayoutStore((state) => state.darkMode)
+  const headerHeight = useLayoutStore((state) => state.headerHeight)
   const location = useLocation()
   const navigate = useNavigate()
   const navigationMenus = menus.length ? menus : storeMenus
@@ -81,11 +81,15 @@ export function TopNavigation({
   return (
     <AntMenu
       mode="horizontal"
-      theme={darkMode ? 'dark' : 'light'}
+      theme="light"
       items={items}
       selectedKeys={activeMenuKey ? [activeMenuKey] : []}
       onClick={handleMenuClick}
-      className={`!min-w-0 !flex-1 !border-0 !bg-transparent [&_.ant-menu-item::after]:hidden [&_.ant-menu-submenu::after]:hidden ${className ?? ''}`}
+      style={{
+        height: headerHeight,
+        lineHeight: `${headerHeight}px`
+      }}
+      className={`!min-w-0 !flex-1 ${className ?? ''}`}
     />
   )
 }

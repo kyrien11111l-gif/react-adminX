@@ -47,11 +47,6 @@
 
 }
 
-/* 修正深色主题下菜单选中项的文字颜色。 */
-:root[data-theme='dark'] .ant-menu.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title {
-  --ant-menu-dark-item-selected-color: var(--ant-color-primary);
-}
-
 /* NProgress 顶部进度条和加载指示器。 */
 #nprogress .bar,
 #nprogress .spinner {
