@@ -13,4 +13,5 @@ export type VirtualTableProps<RecordType extends object> = Omit<
   'classNames' | 'scroll' | 'styles' | 'virtual'
 > & {
   scroll?: VirtualTableScroll<RecordType>
+  smoothSidebarResize?: boolean
 }

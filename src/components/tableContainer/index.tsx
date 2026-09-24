@@ -49,7 +49,7 @@ function mergeCardStyles(
     },
     body: {
       ...styles?.body,
-      padding: 0
+      padding: 12
     }
   }
 }

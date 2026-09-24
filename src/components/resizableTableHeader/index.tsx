@@ -19,6 +19,7 @@ export interface ResizableHeaderCellProps
 
 interface ResizeSession {
   pointerId: number
+  scaleX: number
   startWidth: number
   startX: number
 }
@@ -49,8 +50,13 @@ export function ResizableHeaderCell({
     event.preventDefault()
     event.stopPropagation()
     event.currentTarget.setPointerCapture(event.pointerId)
+    const headerCell = event.currentTarget.closest('th')
+    const scaleX = headerCell && headerCell.offsetWidth > 0
+      ? headerCell.getBoundingClientRect().width / headerCell.offsetWidth
+      : 1
     resizeSessionRef.current = {
       pointerId: event.pointerId,
+      scaleX: scaleX > 0 ? scaleX : 1,
       startWidth: width,
       startX: event.clientX
     }
@@ -64,10 +70,15 @@ export function ResizableHeaderCell({
       return
     }
 
+    if (event.pointerType === 'mouse' && event.buttons === 0) {
+      finishResize(event)
+      return
+    }
+
     event.preventDefault()
     onColumnResize(
       clampWidth(
-        session.startWidth + event.clientX - session.startX,
+        session.startWidth + (event.clientX - session.startX) / session.scaleX,
         minWidth,
         maxWidth
       )
@@ -126,6 +137,7 @@ export function ResizableHeaderCell({
           onKeyDown={handleKeyDown}
           onPointerCancel={finishResize}
           onPointerDown={handlePointerDown}
+          onLostPointerCapture={finishResize}
           onPointerMove={handlePointerMove}
           onPointerUp={finishResize}
         />

@@ -41,9 +41,7 @@ export function transitionToTheme(
     return
   }
 
-  const supportsViewTransition =
-    typeof document.startViewTransition === 'function' &&
-    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const supportsViewTransition = typeof document.startViewTransition === 'function'
 
   if (!supportsViewTransition) {
     applyTheme(nextTheme)

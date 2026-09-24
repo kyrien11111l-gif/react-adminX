@@ -56,7 +56,7 @@ const mockMenus: Menu[] = [
         component: 'system/query/index',
         meta: {
           title: '数据查询',
-          icon: 'SearchOutlined',
+          icon: 'FileSearchOutlined',
           permission: 'system:query:list',
           layout: 'default'
         }
@@ -70,6 +70,18 @@ const mockMenus: Menu[] = [
           title: '虚拟数据查询',
           icon: 'FileSearchOutlined',
           permission: 'system:virtual-query:list',
+          layout: 'default'
+        }
+      },
+      {
+        id: 'system-table-test',
+        name: '表格测试',
+        path: 'table-test',
+        component: 'system/tableTest/index',
+        meta: {
+          title: '表格测试',
+          icon: 'TableOutlined',
+          permission: 'system:table-test:list',
           layout: 'default'
         }
       },

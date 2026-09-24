@@ -34,7 +34,6 @@ import {
   type QueryHeaderFilterKey,
   type QueryPriority,
   type QueryRow,
-  type QuerySource,
   type QueryStatus
 } from '@/pages/system/query/data'
 
@@ -88,13 +87,6 @@ const priorityColors: Record<QueryPriority, string> = {
   high: 'error',
   medium: 'warning',
   low: 'default'
-}
-
-const sourceLabels: Record<QuerySource, string> = {
-  portal: '业务门户',
-  api: '开放接口',
-  schedule: '定时任务',
-  import: '批量导入'
 }
 
 const queryHeaderFilterLabels: Record<QueryHeaderFilterKey, string> = {
@@ -357,14 +349,6 @@ export default function QueryPage() {
         )
       },
       // {
-      //   key: 'source',
-      //   title: '提交来源',
-      //   dataIndex: 'source',
-      //   width: 130,
-      //   align: 'center',
-      //   render: (source: QuerySource) => sourceLabels[source]
-      // },
-      // {
       //   key: 'updatedAt',
       //   title: '更新时间',
       //   dataIndex: 'updatedAt',
@@ -605,6 +589,8 @@ export default function QueryPage() {
       >
         <AutoHeightTable<QueryRow>
           rowKey="id"
+          tableLayout="fixed"
+          smoothSidebarResize
           columns={resolvedTableColumns}
           dataSource={dataSource}
           loading={loading}

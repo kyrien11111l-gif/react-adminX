@@ -68,7 +68,7 @@ const columns: TableColumnsType<RoleRow> = [
 
 export default function RolePage() {
   return (
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+    <div className="mx-auto flex w-full flex-col gap-4">
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12}>
           <Card>

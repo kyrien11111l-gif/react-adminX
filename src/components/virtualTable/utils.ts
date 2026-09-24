@@ -1,6 +1,15 @@
 export const DEFAULT_VIRTUAL_TABLE_SCROLL_Y = 320
 export const MIN_VIRTUAL_TABLE_SCROLL_Y = 1
 
+export function getStableTableLayoutWidth(
+  availableWidth: number,
+  expandedSidebarReserve = 0
+) {
+  const width = Math.max(0, availableWidth - expandedSidebarReserve)
+
+  return Math.max(2, Math.floor(width / 2) * 2 - 2)
+}
+
 function normalizeDimension(value: number) {
   return Number.isFinite(value) ? Math.max(value, 0) : 0
 }

@@ -1,0 +1,25 @@
+/* .table-test-table > .ant-spin,
+.table-test-table > .ant-spin > .ant-spin-container,
+.table-test-table > .ant-spin > .ant-spin-container > .ant-table {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.table-test-table .ant-table-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.table-test-table .ant-table-header,
+.table-test-table .ant-table-title,
+.table-test-table .ant-table-footer,
+.table-test-table .ant-table-pagination {
+  flex: 0 0 auto;
+}
+
+.table-test-table .ant-table-body {
+  flex: 1 1 auto;
+  min-height: 0;
+} */

@@ -11,7 +11,7 @@ const DEFAULT_COLUMN_WIDTH = 160
 const MIN_COLUMN_WIDTH = 80
 const MAX_COLUMN_WIDTH = 600
 
-interface UseTableColumnsOptions<RecordType> {
+export interface UseTableColumnsOptions<RecordType> {
   columns: TableColumnsType<RecordType>
   /** 未提供时按 columns 的元数据自动生成列设置。 */
   defaultSettings?: TableColumnSetting[]

@@ -54,9 +54,8 @@ export function Header({ onOpenMobileMenu, navigation }: HeaderProps) {
         {showMobileMenu ? (
           <Button
             type="text"
-            icon={<MenuOutlined />}
+            icon={<MenuOutlined size={16}/>}
             className="inline-flex"
-            shape="circle"
             aria-label="打开导航菜单"
             onClick={onOpenMobileMenu}
           />

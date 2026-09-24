@@ -7,8 +7,13 @@ import {
   Tag,
   Typography
 } from 'antd'
-import type { TableColumnsType, TableProps, TableRef } from 'antd'
-import { useCallback, useMemo, useRef, useState, type Key } from 'react'
+import type { TableColumnsType, TableProps } from 'antd'
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Key
+} from 'react'
 import { queryVirtualData } from '@/api'
 import { EllipsisParagraph } from '@/components/ellipsisParagraph'
 import { QueryForm } from '@/components/queryForm'
@@ -22,19 +27,21 @@ import type {
   QueryCategory,
   QueryPriority,
   QueryStatus,
-  VirtualQueryHeaderFilterKey,
   VirtualQueryFilters,
+  VirtualQueryHeaderFilterKey,
   VirtualQueryRow
 } from '@/pages/system/virtualQuery/data'
 
-interface VirtualQueryFormValues {
+const SELECTION_COLUMN_WIDTH = 50
+
+interface TableTestFormValues {
   keyword?: string
   category?: QueryCategory | 'all'
   status?: QueryStatus | 'all'
   applicant?: string
 }
 
-interface VirtualQueryRequestValues extends VirtualQueryFormValues {
+interface TableTestRequestValues extends TableTestFormValues {
   orderNo?: string
   title?: string
   department?: string
@@ -43,8 +50,8 @@ interface VirtualQueryRequestValues extends VirtualQueryFormValues {
   pageCurrent: number
 }
 
-const initialQueryValues: VirtualQueryRequestValues = {
-  pageSize: 100,
+const initialQueryValues: TableTestRequestValues = {
+  pageSize: 50,
   pageCurrent: 1
 }
 
@@ -80,10 +87,7 @@ const priorityColors: Record<QueryPriority, string> = {
   low: 'default'
 }
 
-const virtualQueryHeaderFilterLabels: Record<
-  VirtualQueryHeaderFilterKey,
-  string
-> = {
+const headerFilterLabels: Record<VirtualQueryHeaderFilterKey, string> = {
   orderNo: '查询单号',
   title: '业务标题',
   applicant: '申请人',
@@ -102,7 +106,7 @@ const applicantOptions = [
   '马超'
 ].map((value) => ({ label: value, value }))
 
-const virtualQueryFields: QueryFormField<VirtualQueryFormValues>[] = [
+const queryFields: QueryFormField<TableTestFormValues>[] = [
   {
     type: 'input',
     name: 'keyword',
@@ -159,7 +163,7 @@ const virtualQueryFields: QueryFormField<VirtualQueryFormValues>[] = [
 ]
 
 function toVirtualQueryFilters(
-  values: VirtualQueryRequestValues
+  values: TableTestRequestValues
 ): VirtualQueryFilters {
   return {
     keyword: values.keyword,
@@ -183,18 +187,24 @@ function renderCellText(value: string) {
   )
 }
 
-export default function VirtualQueryPage() {
+function shouldCellUpdate(
+  record: VirtualQueryRow,
+  previousRecord: VirtualQueryRow
+) {
+  return record !== previousRecord
+}
+
+export default function TableTestPage() {
   const { message } = AntApp.useApp()
   const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([])
-  const tableRef = useRef<TableRef>(null)
   const queryRequest = useCallback(
-    (values: VirtualQueryRequestValues, signal?: AbortSignal) =>
+    (values: TableTestRequestValues, signal?: AbortSignal) =>
       queryVirtualData(toVirtualQueryFilters(values), signal),
     []
   )
   const handleQueryError = useCallback(
     (error: unknown) => {
-      console.error('虚拟表格查询失败：', error)
+      console.error('表格测试页查询失败：', error)
       void message.error('查询失败，请稍后重试')
     },
     [message]
@@ -229,7 +239,9 @@ export default function VirtualQueryPage() {
         dataIndex: 'title',
         width: 280,
         align: 'center',
-        render: (value: string) => renderCellText(value)
+        render: (value: string) => (
+          <EllipsisParagraph tooltip={value}>{value}</EllipsisParagraph>
+        )
       },
       {
         key: 'category',
@@ -243,7 +255,7 @@ export default function VirtualQueryPage() {
         key: 'applicant',
         title: '申请人',
         dataIndex: 'applicant',
-        width: 120,
+        width: 140,
         align: 'center'
       },
       {
@@ -277,11 +289,10 @@ export default function VirtualQueryPage() {
         key: 'description',
         title: '请求描述',
         dataIndex: 'description',
+        width: 300,
         align: 'center',
-        render: (remark: string) => (
-          <EllipsisParagraph  tooltip={remark}>
-            {remark}
-          </EllipsisParagraph>
+        render: (value: string) => (
+          <EllipsisParagraph tooltip={value}>{value}</EllipsisParagraph>
         )
       },
       {
@@ -307,11 +318,10 @@ export default function VirtualQueryPage() {
     [handleView]
   )
   const tableSettings = useTableSettings<VirtualQueryRow>({ columns })
-  const rowSelection = useMemo<
-    TableProps<VirtualQueryRow>['rowSelection']
-  >(
+  const rowSelection = useMemo<TableProps<VirtualQueryRow>['rowSelection']>(
     () => ({
       align: 'center',
+      columnWidth: SELECTION_COLUMN_WIDTH,
       fixed: true,
       preserveSelectedRowKeys: true,
       selectedRowKeys,
@@ -329,61 +339,17 @@ export default function VirtualQueryPage() {
     lastValues,
     runQuery,
     refresh
-  } = useTableQuery<VirtualQueryRequestValues, VirtualQueryRow>({
+  } = useTableQuery<TableTestRequestValues, VirtualQueryRow>({
     initialData: [],
     initialValues: initialQueryValues,
     query: queryRequest,
     onError: handleQueryError
   })
-  const renderSummary = useCallback(
-    (pageData: readonly VirtualQueryRow[]) => {
-      const statusCounts: Record<QueryStatus, number> = {
-        pending: 0,
-        processing: 0,
-        completed: 0,
-        failed: 0
-      }
-
-      pageData.forEach((record) => {
-        statusCounts[record.status] += 1
-      })
-
-      return (
-        <Table.Summary fixed>
-          <Table.Summary.Row>
-            <Table.Summary.Cell index={0} colSpan={tableSettings.tableColumns.length + 1}>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-                <Typography.Text strong>
-                  本页合计 {pageData.length} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  待处理 {statusCounts.pending} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  处理中 {statusCounts.processing} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  已完成 {statusCounts.completed} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  处理失败 {statusCounts.failed} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  已选 {selectedRowKeys.length} 条
-                </Typography.Text>
-              </div>
-            </Table.Summary.Cell>
-          </Table.Summary.Row>
-        </Table.Summary>
-      )
-    },
-    [selectedRowKeys.length, tableSettings.tableColumns.length]
-  )
   const { pagination, pageSize, resetPagination } = useTablePagination({
     total,
     defaultPageCurrent: initialQueryValues.pageCurrent,
     defaultPageSize: initialQueryValues.pageSize,
-    pageSizeOptions: [50, 100, 200, 500],
+    pageSizeOptions: [50, 100, 200],
     onChange: (page, nextPageSize) => {
       void runQuery({
         ...initialQueryValues,
@@ -414,27 +380,75 @@ export default function VirtualQueryPage() {
     () =>
       tableSettings.tableColumns.map((column) => {
         const columnKey = String(column.key ?? '')
+        const optimizedColumn = { ...column, shouldCellUpdate }
 
-        if (!Object.hasOwn(virtualQueryHeaderFilterLabels, columnKey)) {
-          return column
+        if (!Object.hasOwn(headerFilterLabels, columnKey)) {
+          return optimizedColumn
         }
 
         const filterKey = columnKey as VirtualQueryHeaderFilterKey
 
         return {
-          ...column,
+          ...optimizedColumn,
           ...getTableHeaderSearchProps<VirtualQueryRow>({
             loading,
-            placeholder: `请输入${virtualQueryHeaderFilterLabels[filterKey]}`,
+            placeholder: `请输入${headerFilterLabels[filterKey]}`,
             value: lastValues[filterKey],
             onChange: (value) => handleHeaderFilterChange(filterKey, value)
           })
         }
       }),
-    [handleHeaderFilterChange, lastValues, loading, tableSettings.tableColumns]
+    [tableSettings.tableColumns, handleHeaderFilterChange, lastValues, loading]
+  )
+  const renderSummary = useCallback(
+    (pageData: readonly VirtualQueryRow[]) => {
+      const statusCounts: Record<QueryStatus, number> = {
+        pending: 0,
+        processing: 0,
+        completed: 0,
+        failed: 0
+      }
+
+      pageData.forEach((record) => {
+        statusCounts[record.status] += 1
+      })
+
+      return (
+        <Table.Summary fixed>
+          <Table.Summary.Row>
+            <Table.Summary.Cell
+              index={0}
+              colSpan={tableSettings.tableColumns.length + 1}
+            >
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+                <Typography.Text strong>
+                  本页合计 {pageData.length} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  待处理 {statusCounts.pending} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  处理中 {statusCounts.processing} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  已完成 {statusCounts.completed} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  处理失败 {statusCounts.failed} 条
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  已选 {selectedRowKeys.length} 条
+                </Typography.Text>
+              </div>
+            </Table.Summary.Cell>
+          </Table.Summary.Row>
+        </Table.Summary>
+      )
+    },
+    [tableSettings.tableColumns.length, selectedRowKeys.length]
   )
 
-  function handleQuery(values: VirtualQueryFormValues) {
+  function handleQuery(values: TableTestFormValues) {
     resetPagination()
     void runQuery({
       ...lastValues,
@@ -450,17 +464,6 @@ export default function VirtualQueryPage() {
       pageCurrent: 1,
       pageSize
     })
-  }
-
-  function handleScrollToRow() {
-    const targetIndex = Math.min(99, dataSource.length - 1)
-
-    if (targetIndex < 0) {
-      return
-    }
-
-    tableRef.current?.scrollTo({ index: targetIndex, align: 'start' })
-    void message.info(`已定位到当前页第 ${targetIndex + 1} 行`)
   }
 
   function handleExport() {
@@ -490,7 +493,7 @@ export default function VirtualQueryPage() {
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
-    anchor.download = `虚拟查询结果-${new Date().toISOString().slice(0, 10)}.csv`
+    anchor.download = `表格测试数据-${new Date().toISOString().slice(0, 10)}.csv`
     anchor.click()
     URL.revokeObjectURL(url)
     void message.success(`已导出 ${dataSource.length} 条数据`)
@@ -499,10 +502,10 @@ export default function VirtualQueryPage() {
   return (
     <main className="flex h-full min-h-0 w-full flex-col gap-4">
       <Card size="small" className="shrink-0">
-        <QueryForm<VirtualQueryFormValues>
-          fields={virtualQueryFields}
+        <QueryForm<TableTestFormValues>
+          fields={queryFields}
           loading={loading}
-          name="virtual-data-query"
+          name="table-test-query"
           onFinish={handleQuery}
           onReset={handleReset}
           initialValues={{ category: 'all', status: 'all' }}
@@ -510,26 +513,19 @@ export default function VirtualQueryPage() {
       </Card>
 
       <TableContainer
+        className="overflow-hidden"
         title={
           <TableToolbar
             {...tableSettings.toolbarProps}
-            title="虚拟数据列表"
+            title="表格测试数据"
             actions={
-              <>
-                <Button
-                  disabled={dataSource.length < 100}
-                  onClick={handleScrollToRow}
-                >
-                  定位当前页第 100 行
-                </Button>
-                <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                  导出当前页
-                </Button>
-              </>
+              <Button icon={<DownloadOutlined />} onClick={handleExport}>
+                导出当前页
+              </Button>
             }
             extra={
               <Typography.Text type="secondary">
-                共 {total.toLocaleString()} 条 · 已启用虚拟滚动
+                共 {total.toLocaleString()} 条
               </Typography.Text>
             }
             onRefresh={() => {
@@ -540,8 +536,9 @@ export default function VirtualQueryPage() {
         }
       >
         <VirtualTable<VirtualQueryRow>
-          ref={tableRef}
           rowKey="id"
+          tableLayout="fixed"
+          smoothSidebarResize
           columns={resolvedTableColumns}
           dataSource={dataSource}
           loading={loading}

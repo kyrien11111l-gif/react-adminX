@@ -3,9 +3,6 @@ import type { TableProps, TableRef } from 'antd'
 import {
   forwardRef,
   useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
   type CSSProperties,
   type ForwardedRef,
   type ReactElement,
@@ -14,35 +11,20 @@ import {
 import '@/components/virtualTable/style.css'
 import type { VirtualTableProps } from '@/components/virtualTable/type'
 import { getResizableTableComponents } from '@/components/resizableTableHeader/merge'
-import {
-  DEFAULT_VIRTUAL_TABLE_SCROLL_Y,
-  getVirtualTableAvailableHeight,
-  getVirtualTableBodyHeight
-} from '@/components/virtualTable/utils'
-import {
-  getTableScrollWidth,
-  getTableSelectionColumnWidth
-} from '@/utils/table'
+import { useTableViewport, tableMeasureClassNames } from '@/hooks/useTableViewport'
+import { getTableScrollWidth, getTableSelectionColumnWidth } from '@/utils/table'
 import { joinClassNames } from '@/utils/classNames'
 
 export type * from '@/components/virtualTable/type'
 
-const measureClassNames = {
-  title: 'virtual-table-measure-title',
-  header: 'virtual-table-measure-header',
-  footer: 'virtual-table-measure-footer',
-  pagination: 'virtual-table-measure-pagination',
-  summary: 'ant-table-summary'
-}
-
 const tableClassNames = {
-  title: measureClassNames.title,
+  title: tableMeasureClassNames.title,
   header: {
-    wrapper: measureClassNames.header
+    wrapper: tableMeasureClassNames.header
   },
-  footer: measureClassNames.footer,
+  footer: tableMeasureClassNames.footer,
   pagination: {
-    root: measureClassNames.pagination
+    root: tableMeasureClassNames.pagination
   }
 } satisfies NonNullable<TableProps<object>['classNames']>
 
@@ -65,48 +47,6 @@ const baseTableStyles = {
   }
 } satisfies NonNullable<TableProps<object>['styles']>
 
-function getElementHeight(element: HTMLElement | null) {
-  if (!element) {
-    return 0
-  }
-
-  const styles = getComputedStyle(element)
-  const marginTop = Number.parseFloat(styles.marginTop) || 0
-  const marginBottom = Number.parseFloat(styles.marginBottom) || 0
-
-  return element.getBoundingClientRect().height + marginTop + marginBottom
-}
-
-function getElementsHeight(root: HTMLElement, className: string) {
-  const elements = Array.from(
-    root.querySelectorAll<HTMLElement>(`.${className}`)
-  )
-
-  return elements
-    .filter((element) =>
-      elements.every(
-        (candidate) => candidate === element || !candidate.contains(element)
-      )
-    )
-    .reduce((height, element) => height + getElementHeight(element), 0)
-}
-
-function getTableFixedHeight(root: HTMLElement) {
-  return [
-    measureClassNames.title,
-    measureClassNames.header,
-    measureClassNames.footer,
-    measureClassNames.summary
-  ].reduce(
-    (height, className) => height + getElementsHeight(root, className),
-    0
-  )
-}
-
-function getPaginationHeight(root: HTMLElement) {
-  return getElementsHeight(root, measureClassNames.pagination)
-}
-
 function getPositiveNumber(value: number | undefined, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
     ? value
@@ -117,35 +57,43 @@ function VirtualTableInner<RecordType extends object>(
   {
     scroll,
     style,
-    components: componentsProp,
-    ...restProps
+    components: customComponents,
+    smoothSidebarResize = true,
+    ...tableProps
   }: VirtualTableProps<RecordType>,
   ref: ForwardedRef<TableRef>
 ) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const tableRef = useRef<TableRef>(null)
-  const isEmpty = !restProps.dataSource?.length
-  const [containerMaxHeight, setContainerMaxHeight] = useState<number>()
-  const [sectionHeight, setSectionHeight] = useState<number>()
-  const [scrollY, setScrollY] = useState(DEFAULT_VIRTUAL_TABLE_SCROLL_Y)
+  const isEmpty = !tableProps.dataSource?.length
   const selectionColumnWidth = getTableSelectionColumnWidth(
-    restProps.rowSelection
+    tableProps.rowSelection
   )
   const resolvedScrollX = getTableScrollWidth(
     getPositiveNumber(scroll?.x, 1200),
     selectionColumnWidth
   )
-  const rowSelection = restProps.rowSelection
+  const rowSelection = tableProps.rowSelection
     ? {
-        ...restProps.rowSelection,
+        ...tableProps.rowSelection,
         columnWidth: selectionColumnWidth
       }
     : undefined
-  const components = getResizableTableComponents<RecordType>(componentsProp)
+  const components = getResizableTableComponents<RecordType>(customComponents)
   const scrollYLimit =
     typeof scroll?.y === 'number' && Number.isFinite(scroll.y) && scroll.y > 0
       ? scroll.y
       : Number.POSITIVE_INFINITY
+  const {
+    containerRef,
+    tableRef,
+    containerMaxHeight,
+    sectionHeight,
+    scrollY
+  } = useTableViewport({
+    dataLength: tableProps.dataSource?.length ?? 0,
+    density: tableProps.size,
+    scrollYLimit,
+    smoothSidebarResize
+  })
 
   const setTableRef = useCallback(
     (value: TableRef | null) => {
@@ -157,97 +105,8 @@ function VirtualTableInner<RecordType extends object>(
         ref.current = value
       }
     },
-    [ref]
+    [ref, tableRef]
   )
-
-  const measure = useCallback(() => {
-    const container = containerRef.current
-    const root = tableRef.current?.nativeElement
-
-    if (!container || !root) {
-      return
-    }
-
-    const containerRect = container.getBoundingClientRect()
-    const parentRect = container.parentElement?.getBoundingClientRect()
-    const parentBottom =
-      parentRect && parentRect.height > 0 ? parentRect.bottom : undefined
-    const viewportHeight =
-      typeof window !== 'undefined' && Number.isFinite(window.innerHeight)
-        ? window.innerHeight
-        : undefined
-    const availableHeight = getVirtualTableAvailableHeight(
-      containerRect.top,
-      parentBottom,
-      viewportHeight
-    )
-
-    if (availableHeight !== undefined && availableHeight > 0) {
-      setContainerMaxHeight((current) => {
-        const next = Math.max(availableHeight, 1)
-        return current === next ? current : next
-      })
-    }
-
-    const rootRect = root.getBoundingClientRect()
-    const currentRootHeight =
-      rootRect.height || containerRect.height || availableHeight || 0
-    const boundedRootHeight =
-      availableHeight === undefined
-        ? currentRootHeight
-        : Math.min(currentRootHeight, availableHeight)
-    const paginationHeight = getPaginationHeight(root)
-    const tableHeight = getVirtualTableBodyHeight(
-      boundedRootHeight,
-      paginationHeight
-    )
-    const nextScrollY = getVirtualTableBodyHeight(
-      tableHeight,
-      getTableFixedHeight(root),
-      scrollYLimit
-    )
-
-    setScrollY((current) => (current === nextScrollY ? current : nextScrollY))
-    setSectionHeight((current) =>
-      current === tableHeight ? current : tableHeight
-    )
-  }, [scrollYLimit])
-
-  useLayoutEffect(() => {
-    measure()
-
-    const container = containerRef.current
-    const root = tableRef.current?.nativeElement
-    const parent = container?.parentElement
-    const resizeObserver =
-      typeof ResizeObserver === 'undefined'
-        ? null
-        : new ResizeObserver(measure)
-    const observedElements = [
-      container,
-      root,
-      parent,
-      ...(root
-        ? Object.values(measureClassNames).flatMap((className) =>
-            Array.from(
-              root.querySelectorAll<HTMLElement>(`.${className}`)
-            )
-          )
-        : [])
-    ]
-
-    observedElements.forEach((element) => {
-      if (element && resizeObserver) {
-        resizeObserver.observe(element)
-      }
-    })
-    window.addEventListener('resize', measure)
-
-    return () => {
-      resizeObserver?.disconnect()
-      window.removeEventListener('resize', measure)
-    }
-  }, [measure, restProps.dataSource?.length, restProps.pagination])
 
   const tableStyles = {
     ...baseTableStyles,
@@ -284,7 +143,7 @@ function VirtualTableInner<RecordType extends object>(
       style={containerStyle}
     >
       <Table<RecordType>
-        {...restProps}
+        {...tableProps}
         components={components}
         ref={setTableRef}
         rowSelection={rowSelection}

@@ -31,7 +31,7 @@ export function BrandLogo({ collapsed = false, className }: BrandLogoProps) {
       <Typography.Text
         strong
         ellipsis
-        className={`min-w-0 whitespace-nowrap transition-opacity duration-200 ease-out motion-reduce:transition-none ${
+        className={`min-w-0 whitespace-nowrap transition-opacity ${
           collapsed ? 'opacity-0' : 'opacity-100'
         }`}
       >

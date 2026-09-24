@@ -129,15 +129,3 @@ html[data-theme='dark']::view-transition-new(root) {
 html[data-theme='light']::view-transition-old(root) {
   animation: theme-conceal 500ms ease-in both;
 }
-
-/* 用户要求减少动态效果时，关闭滚动、过渡和动画。 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto;
-    transition-duration: 0.01ms;
-    animation-duration: 0.01ms;
-    animation-iteration-count: 1;
-  }
-}

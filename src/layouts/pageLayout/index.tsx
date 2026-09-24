@@ -1,5 +1,4 @@
-import { Layout, theme } from 'antd'
-import { motion } from 'motion/react'
+import { Layout } from 'antd'
 import SimpleBar from 'simplebar-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useOutlet } from 'react-router-dom'
@@ -31,11 +30,8 @@ export function PageLayout() {
   )
   const collapsed = useLayoutStore((state) => state.collapsed)
   const contentMaximized = useLayoutStore((state) => state.contentMaximized)
-  const headerHeight = useLayoutStore((state) => state.headerHeight)
-  const pageTabsHeight = useLayoutStore((state) => state.pageTabsHeight)
   const navigationStyle = useLayoutStore((state) => state.navigationStyle)
   const menus = usePermissionStore((state) => state.menus)
-  const { token } = theme.useToken()
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') {
@@ -73,9 +69,6 @@ export function PageLayout() {
   const isTwoColumnNavigation =
     currentNavigationStyle === TWO_COLUMN_NAVIGATION
   const isMixedNavigation = currentNavigationStyle === MIXED_NAVIGATION
-  const contentHeight = `calc(100vh - ${
-    contentMaximized ? 0 : headerHeight
-  }px - ${pageTabsHeight}px)`
   const hasSidebar =
     currentNavigationStyle === SIDE_NAVIGATION ||
     isTwoColumnNavigation ||
@@ -117,10 +110,12 @@ export function PageLayout() {
         />
       ) : null}
 
-      <MobileSidebar
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-      />
+      {isMobile ? (
+        <MobileSidebar
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        />
+      ) : null}
 
       <Layout className="h-full min-h-0 min-w-0">
         {!contentMaximized ? (
@@ -131,27 +126,12 @@ export function PageLayout() {
         ) : null}
         <PageTabs />
         <Layout.Content
-          id="main-content"
-          className="min-h-0 min-w-0 flex-none overflow-hidden"
-          style={{
-            background: token.colorBgLayout,
-            height: contentHeight,
-            maxHeight: contentHeight
-          }}
+          className="min-h-0 min-w-0 flex-1 overflow-hidden bg-[var(--ant-color-bg-layout)]"
         >
           <SimpleBar className="h-full [&_.simplebar-content-wrapper]:h-full [&_.simplebar-content]:h-full [&_.simplebar-content]:min-h-0">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                duration: 0.48,
-                ease: [0.65, 0, 0.35, 1]
-              }}
-              className="flex h-full min-h-0 flex-col p-2 min-[576px]:p-4"
-            >
+            <div className="flex h-full min-h-0 flex-col p-2 min-[576px]:p-4">
               {outlet}
-            </motion.div>
+            </div>
           </SimpleBar>
         </Layout.Content>
       </Layout>

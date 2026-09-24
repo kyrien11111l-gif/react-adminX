@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getStableTableLayoutWidth,
   getVirtualTableAvailableHeight,
   getVirtualTableBodyHeight
 } from '@/components/virtualTable/utils'
@@ -23,5 +24,13 @@ describe('VirtualTable height helpers', () => {
   it('includes the selection column in the horizontal scroll width', () => {
     expect(getTableScrollWidth(1508, 80)).toBe(1588)
     expect(getTableScrollWidth(1508)).toBe(1508)
+  })
+
+  it('keeps the layout width stable while the sidebar collapses', () => {
+    const expandedWidth = getStableTableLayoutWidth(1284)
+    const collapsedWidth = getStableTableLayoutWidth(1428, 144)
+
+    expect(collapsedWidth).toBe(expandedWidth)
+    expect(collapsedWidth).toBe(1282)
   })
 })
