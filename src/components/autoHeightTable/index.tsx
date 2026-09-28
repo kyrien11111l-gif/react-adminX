@@ -1,5 +1,5 @@
 import { Table } from 'antd'
-import type { TablePaginationConfig, TableProps, TableRef } from 'antd'
+import type { TablePaginationConfig, TableProps } from 'antd'
 import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import '@/components/autoHeightTable/style.css'
 import type { AutoHeightTableProps } from '@/components/autoHeightTable/type'
@@ -9,6 +9,7 @@ import {
   getTableSelectionColumnWidth
 } from '@/utils/table'
 import { joinClassNames } from '@/utils/classNames'
+import { useStableTableWidth } from '@/hooks/useStableTableWidth'
 
 export type * from '@/components/autoHeightTable/type'
 
@@ -64,9 +65,10 @@ export function AutoHeightTable<RecordType extends object>({
   pagination,
   rowSelection: rowSelectionProp,
   components: componentsProp,
+  smoothSidebarResize = false,
   ...restProps
 }: AutoHeightTableProps<RecordType>) {
-  const tableRef = useRef<TableRef>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const isEmpty = !dataSource?.length
   const normalizedPagination =
     pagination === false
@@ -84,62 +86,54 @@ export function AutoHeightTable<RecordType extends object>({
     typeof scrollX === 'number'
       ? getTableScrollWidth(scrollX, selectionColumnWidth)
       : scrollX
-  const components = getResizableTableComponents<RecordType>(componentsProp)
-
+  const tableRef = useStableTableWidth(
+    smoothSidebarResize,
+    containerRef,
+    typeof resolvedScrollX === 'number' ? resolvedScrollX : undefined
+  )
   useLayoutEffect(() => {
-    if (!isEmpty) {
-      return
+    const table = tableRef.current?.nativeElement
+    const header = table?.querySelector<HTMLElement>('.ant-table-header')
+    const body = table?.querySelector<HTMLElement>('.ant-table-body')
+
+    if (header && body && header.scrollLeft !== body.scrollLeft) {
+      header.scrollLeft = body.scrollLeft
     }
-
-    const body = tableRef.current?.nativeElement.querySelector<HTMLElement>(
-      '.ant-table-body'
-    )
-
-    if (!body) {
-      return
-    }
-
-    const updateEmptyContentWidth = () => {
-      body.style.setProperty(
-        '--auto-height-table-empty-content-width',
-        `${body.clientWidth}px`
-      )
-    }
-    const resizeObserver =
-      typeof ResizeObserver === 'undefined'
-        ? undefined
-        : new ResizeObserver(updateEmptyContentWidth)
-
-    updateEmptyContentWidth()
-    resizeObserver?.observe(body)
-
-    return () => {
-      resizeObserver?.disconnect()
-      body.style.removeProperty('--auto-height-table-empty-content-width')
-    }
-  }, [isEmpty])
+  }, [resolvedScrollX, tableRef])
+  const components = getResizableTableComponents<RecordType>(componentsProp)
+  const tableStyle = {
+    ...style,
+    height: '100%'
+  } satisfies CSSProperties
 
   return (
-    <Table<RecordType>
-      {...restProps}
-      components={components}
-      ref={tableRef}
-      dataSource={dataSource}
-      pagination={normalizedPagination}
-      rowSelection={rowSelection}
-      rootClassName={joinClassNames(
-        'auto-height-table',
-        isEmpty ? 'auto-height-table-empty' : null,
-        rootClassName
+    <div
+      ref={containerRef}
+      className={joinClassNames(
+        'auto-height-table-container',
+        isEmpty ? 'auto-height-table-empty' : null
       )}
-      scroll={{
-        ...scroll,
-        x: resolvedScrollX,
-        y: '100%'
-      }}
-      style={{ ...style, height: '100%' }}
-      styles={tableStyles}
-      bordered
-    />
+    >
+      <Table<RecordType>
+        {...restProps}
+        components={components}
+        ref={tableRef}
+        dataSource={dataSource}
+        pagination={normalizedPagination}
+        rowSelection={rowSelection}
+        rootClassName={joinClassNames(
+          'auto-height-table',
+          rootClassName
+        )}
+        scroll={{
+          ...scroll,
+          x: resolvedScrollX,
+          y: '100%'
+        }}
+        style={tableStyle}
+        styles={tableStyles}
+        bordered
+      />
+    </div>
   )
 }

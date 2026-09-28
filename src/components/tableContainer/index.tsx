@@ -30,8 +30,8 @@ function mergeCardStyles(
           borderBottom: 'none'
         },
         body: {
-          ...resolvedStyles?.body,
-          padding: 0
+          padding: 12,
+          ...resolvedStyles?.body
         }
       }
     }
@@ -48,8 +48,8 @@ function mergeCardStyles(
       borderBottom: 'none'
     },
     body: {
-      ...styles?.body,
-      padding: 12
+      padding: 12,
+      ...styles?.body
     }
   }
 }
@@ -72,7 +72,6 @@ function mergeCardClassNames(
 
 export function TableContainer({
   size = 'small',
-  variant = 'borderless',
   className,
   classNames,
   styles,
@@ -84,7 +83,6 @@ export function TableContainer({
       className={joinClassNames(tableContainerClassName, className)}
       classNames={mergeCardClassNames(classNames)}
       size={size}
-      variant={variant}
       styles={mergeCardStyles(styles)}
     />
   )

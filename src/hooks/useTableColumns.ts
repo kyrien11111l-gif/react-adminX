@@ -200,6 +200,10 @@ export function useTableColumns<RecordType>({
 
         const originalOnHeaderCell = column.onHeaderCell
         const width = setting.width ?? getColumnWidth(column)
+        const headerTitle =
+          typeof column.title === 'string' || typeof column.title === 'number'
+            ? String(column.title)
+            : undefined
 
         return [
           {
@@ -214,6 +218,7 @@ export function useTableColumns<RecordType>({
               const originalProps = originalOnHeaderCell?.(currentColumn)
               const headerCellProps: ResizableHeaderCellProps = {
                 ...originalProps,
+                ...(headerTitle === undefined ? {} : { title: headerTitle }),
                 maxWidth: MAX_COLUMN_WIDTH,
                 minWidth: MIN_COLUMN_WIDTH,
                 onColumnResize: (nextWidth) =>

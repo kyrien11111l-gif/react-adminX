@@ -1,5 +1,14 @@
 .resizable-table-header-cell {
   position: relative;
+  white-space: nowrap;
+}
+
+.resizable-table-header-cell .ant-table-column-title,
+.resizable-table-header-cell .ant-table-filter-column-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .resizable-table-column-handle {
