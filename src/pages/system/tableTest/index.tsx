@@ -466,7 +466,6 @@ export default function TableTestPage() {
       </Card>
 
       <TableContainer
-        className="overflow-hidden"
         title={
           <TableToolbar
             {...tableSettings.toolbarProps}

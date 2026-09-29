@@ -13,7 +13,8 @@ const mockPermissions = [
   'system:role:list',
   'system:query:list',
   'system:table-test:list',
-  'system:virtual-query:list'
+  'system:virtual-query:list',
+  'system:tanstack:list'
 ]
 
 export function handleMockUserInfo(): Response {

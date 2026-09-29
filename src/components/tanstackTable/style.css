@@ -1,0 +1,213 @@
+.tanstack-table {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  color: var(--tanstack-text);
+  background: var(--tanstack-bg);
+}
+
+.tanstack-table-spin {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tanstack-table-spin > .ant-spin-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tanstack-table-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--tanstack-border);
+}
+
+.tanstack-table-scroll-empty {
+  display: flex;
+  flex-direction: column;
+}
+
+.tanstack-table-scroll-empty > table {
+  flex: 0 0 auto;
+}
+
+.tanstack-table-scroll {
+  scrollbar-color: color-mix(
+    in srgb,
+    var(--ant-color-text-placeholder, rgb(0 0 0 / 25%)) 50%,
+    var(--tanstack-bg)
+  ) var(--tanstack-bg);
+  scrollbar-width: thin;
+}
+
+.tanstack-table table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tanstack-table th,
+.tanstack-table td {
+  box-sizing: border-box;
+  padding: var(--tanstack-padding);
+  border-inline-end: 1px solid var(--tanstack-border);
+  border-block-end: 1px solid var(--tanstack-border);
+  white-space: nowrap;
+}
+
+.tanstack-table-virtualized tbody > tr:not(.tanstack-table-virtual-spacer),
+.tanstack-table-virtualized tbody > tr:not(.tanstack-table-virtual-spacer) > td {
+  height: var(--tanstack-row-height);
+}
+
+.tanstack-table-virtual-spacer > td {
+  padding: 0;
+  border: 0;
+}
+
+.tanstack-table th {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  font-weight: 600;
+  background: linear-gradient(var(--tanstack-head-bg), var(--tanstack-head-bg)), var(--tanstack-bg);
+}
+
+.tanstack-table .tanstack-table-heading {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 4px;
+}
+
+.tanstack-table .tanstack-table-sort {
+  padding-inline: 0;
+  color: inherit;
+  font-weight: inherit;
+}
+
+.tanstack-table td.tanstack-table-pinned,
+.tanstack-table td.tanstack-table-leading {
+  position: sticky;
+  z-index: 2;
+  background: var(--tanstack-bg);
+}
+
+.tanstack-table th.tanstack-table-pinned,
+.tanstack-table th.tanstack-table-leading {
+  z-index: 4;
+}
+
+.tanstack-table-shadow-left::after,
+.tanstack-table-shadow-right::after {
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  width: 30px;
+  content: '';
+  pointer-events: none;
+}
+
+.tanstack-table-shadow-left::after {
+  left: 100%;
+  box-shadow: inset 10px 0 8px -8px var(--tanstack-fixed-shadow);
+}
+
+.tanstack-table-shadow-right::after {
+  right: 100%;
+  box-shadow: inset -10px 0 8px -8px var(--tanstack-fixed-shadow);
+}
+
+.tanstack-table tbody tr:hover td {
+  background: var(--tanstack-hover-bg);
+}
+
+.tanstack-table tbody tr:hover td.tanstack-table-pinned,
+.tanstack-table tbody tr:hover td.tanstack-table-leading {
+  background: linear-gradient(var(--tanstack-hover-bg), var(--tanstack-hover-bg)), var(--tanstack-bg);
+}
+
+.tanstack-table tbody tr.is-selected td {
+  background: var(--tanstack-selected-bg);
+}
+
+.tanstack-table tbody tr.is-selected td.tanstack-table-pinned,
+.tanstack-table tbody tr.is-selected td.tanstack-table-leading {
+  background: linear-gradient(var(--tanstack-selected-bg), var(--tanstack-selected-bg)), var(--tanstack-bg);
+}
+
+.tanstack-table tbody tr.is-selected:hover td {
+  background: var(--tanstack-selected-hover-bg);
+}
+
+.tanstack-table tbody tr.is-selected:hover td.tanstack-table-pinned,
+.tanstack-table tbody tr.is-selected:hover td.tanstack-table-leading {
+  background: linear-gradient(var(--tanstack-selected-hover-bg), var(--tanstack-selected-hover-bg)), var(--tanstack-bg);
+}
+
+.tanstack-table tbody td,
+.tanstack-table tbody tr:hover td.tanstack-table-pinned,
+.tanstack-table tbody tr:hover td.tanstack-table-leading,
+.tanstack-table tbody tr.is-selected td.tanstack-table-pinned,
+.tanstack-table tbody tr.is-selected td.tanstack-table-leading,
+.tanstack-table tbody tr.is-selected:hover td.tanstack-table-pinned,
+.tanstack-table tbody tr.is-selected:hover td.tanstack-table-leading {
+  background-clip: padding-box;
+}
+
+.tanstack-table-expanded-row > td {
+  white-space: normal;
+  background: var(--tanstack-head-bg);
+}
+
+.tanstack-table-selection {
+  text-align: center;
+}
+
+.tanstack-table-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tanstack-table-empty {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  position: sticky;
+  left: 0;
+  place-items: center;
+}
+
+.tanstack-table-empty .ant-empty {
+  margin: 0;
+}
+
+.tanstack-table-summary,
+.tanstack-table-pagination {
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border: 1px solid var(--tanstack-border);
+  border-top: 0;
+}
+
+.tanstack-table-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .tanstack-table-pagination {
+    justify-content: flex-start;
+  }
+}

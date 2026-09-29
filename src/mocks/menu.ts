@@ -86,6 +86,18 @@ const mockMenus: Menu[] = [
         }
       },
       {
+        id: 'system-tanstack',
+        name: 'TanStack 表格',
+        path: 'tanstack',
+        component: 'system/tanstack/index',
+        meta: {
+          title: 'TanStack 表格',
+          icon: 'TableOutlined',
+          permission: 'system:tanstack:list',
+          layout: 'default'
+        }
+      },
+      {
         id: 'system-audit',
         name: '审计记录',
         path: 'audit',

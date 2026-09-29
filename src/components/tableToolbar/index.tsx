@@ -149,8 +149,7 @@ function ColumnSettings({
 
     const nextSettings = [...settings]
     const [sourceSetting] = nextSettings.splice(sourceIndex, 1)
-    const insertIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex
-    nextSettings.splice(insertIndex, 0, sourceSetting)
+    nextSettings.splice(targetIndex, 0, sourceSetting)
     onChange(nextSettings)
   }
 
@@ -169,7 +168,13 @@ function ColumnSettings({
     const targetSetting = sameGroup[groupIndex + offset]
 
     if (targetSetting) {
-      moveSetting(key, targetSetting.key)
+      const targetIndex = settings.findIndex(
+        (setting) => setting.key === targetSetting.key
+      )
+      const nextSettings = [...settings]
+      const [sourceSetting] = nextSettings.splice(currentIndex, 1)
+      nextSettings.splice(targetIndex, 0, sourceSetting)
+      onChange(nextSettings)
     }
   }
 
