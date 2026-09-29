@@ -3,7 +3,6 @@ import {
   App as AntApp,
   Button,
   Card,
-  Table,
   Tag,
   Typography
 } from 'antd'
@@ -31,6 +30,7 @@ import type {
   VirtualQueryHeaderFilterKey,
   VirtualQueryRow
 } from '@/pages/system/virtualQuery/data'
+import { QueryContainer } from '@/components/queryContainer'
 
 const SELECTION_COLUMN_WIDTH = 50
 
@@ -400,53 +400,6 @@ export default function TableTestPage() {
       }),
     [tableSettings.tableColumns, handleHeaderFilterChange, lastValues, loading]
   )
-  const renderSummary = useCallback(
-    (pageData: readonly VirtualQueryRow[]) => {
-      const statusCounts: Record<QueryStatus, number> = {
-        pending: 0,
-        processing: 0,
-        completed: 0,
-        failed: 0
-      }
-
-      pageData.forEach((record) => {
-        statusCounts[record.status] += 1
-      })
-
-      return (
-        <Table.Summary fixed>
-          <Table.Summary.Row>
-            <Table.Summary.Cell
-              index={0}
-              colSpan={tableSettings.tableColumns.length + 1}
-            >
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-                <Typography.Text strong>
-                  本页合计 {pageData.length} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  待处理 {statusCounts.pending} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  处理中 {statusCounts.processing} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  已完成 {statusCounts.completed} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  处理失败 {statusCounts.failed} 条
-                </Typography.Text>
-                <Typography.Text type="secondary">
-                  已选 {selectedRowKeys.length} 条
-                </Typography.Text>
-              </div>
-            </Table.Summary.Cell>
-          </Table.Summary.Row>
-        </Table.Summary>
-      )
-    },
-    [tableSettings.tableColumns.length, selectedRowKeys.length]
-  )
 
   function handleQuery(values: TableTestFormValues) {
     resetPagination()
@@ -471,14 +424,14 @@ export default function TableTestPage() {
       key: keyof VirtualQueryRow
       title: string
     }> = [
-      { key: 'sequence', title: '序号' },
-      { key: 'orderNo', title: '查询单号' },
-      { key: 'title', title: '业务标题' },
-      { key: 'category', title: '业务类型' },
-      { key: 'applicant', title: '申请人' },
-      { key: 'status', title: '处理状态' },
-      { key: 'updatedAt', title: '更新时间' }
-    ]
+        { key: 'sequence', title: '序号' },
+        { key: 'orderNo', title: '查询单号' },
+        { key: 'title', title: '业务标题' },
+        { key: 'category', title: '业务类型' },
+        { key: 'applicant', title: '申请人' },
+        { key: 'status', title: '处理状态' },
+        { key: 'updatedAt', title: '更新时间' }
+      ]
     const escapeCell = (value: unknown) =>
       `"${String(value ?? '').replaceAll('"', '""')}"`
     const lines = [
@@ -500,7 +453,7 @@ export default function TableTestPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col gap-4">
+    <QueryContainer>
       <Card size="small" className="shrink-0">
         <QueryForm<TableTestFormValues>
           fields={queryFields}
@@ -543,13 +496,12 @@ export default function TableTestPage() {
           dataSource={dataSource}
           loading={loading}
           rowSelection={rowSelection}
-          summary={renderSummary}
           size={tableSettings.density}
           bordered
           pagination={pagination}
           scroll={{ x: tableSettings.tableScrollX }}
         />
       </TableContainer>
-    </main>
+    </QueryContainer>
   )
 }

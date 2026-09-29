@@ -26,6 +26,7 @@ import type {
   VirtualQueryFilters,
   VirtualQueryRow
 } from '@/pages/system/virtualQuery/data'
+import { QueryContainer } from '@/components/queryContainer'
 
 interface VirtualQueryFormValues {
   keyword?: string
@@ -279,7 +280,7 @@ export default function VirtualQueryPage() {
         dataIndex: 'description',
         align: 'center',
         render: (remark: string) => (
-          <EllipsisParagraph  tooltip={remark}>
+          <EllipsisParagraph tooltip={remark}>
             {remark}
           </EllipsisParagraph>
         )
@@ -383,7 +384,7 @@ export default function VirtualQueryPage() {
     total,
     defaultPageCurrent: initialQueryValues.pageCurrent,
     defaultPageSize: initialQueryValues.pageSize,
-    pageSizeOptions: [50, 100, 200, 500],
+    pageSizeOptions: [10, 50, 100, 200, 500],
     onChange: (page, nextPageSize) => {
       void runQuery({
         ...initialQueryValues,
@@ -468,14 +469,14 @@ export default function VirtualQueryPage() {
       key: keyof VirtualQueryRow
       title: string
     }> = [
-      { key: 'sequence', title: '序号' },
-      { key: 'orderNo', title: '查询单号' },
-      { key: 'title', title: '业务标题' },
-      { key: 'category', title: '业务类型' },
-      { key: 'applicant', title: '申请人' },
-      { key: 'status', title: '处理状态' },
-      { key: 'updatedAt', title: '更新时间' }
-    ]
+        { key: 'sequence', title: '序号' },
+        { key: 'orderNo', title: '查询单号' },
+        { key: 'title', title: '业务标题' },
+        { key: 'category', title: '业务类型' },
+        { key: 'applicant', title: '申请人' },
+        { key: 'status', title: '处理状态' },
+        { key: 'updatedAt', title: '更新时间' }
+      ]
     const escapeCell = (value: unknown) =>
       `"${String(value ?? '').replaceAll('"', '""')}"`
     const lines = [
@@ -497,7 +498,7 @@ export default function VirtualQueryPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col gap-4">
+    <QueryContainer>
       <Card size="small" className="shrink-0">
         <QueryForm<VirtualQueryFormValues>
           fields={virtualQueryFields}
@@ -553,6 +554,6 @@ export default function VirtualQueryPage() {
           scroll={{ x: tableSettings.tableScrollX }}
         />
       </TableContainer>
-    </main>
+    </QueryContainer>
   )
 }

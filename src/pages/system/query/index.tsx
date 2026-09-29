@@ -36,6 +36,7 @@ import {
   type QueryRow,
   type QueryStatus
 } from '@/pages/system/query/data'
+import { QueryContainer } from '@/components/queryContainer'
 
 interface QueryFormValues {
   keyword?: string
@@ -294,7 +295,7 @@ export default function QueryPage() {
         width: 280,
         align: 'center',
         render: (remark: string) => (
-          <EllipsisParagraph  tooltip={remark}>
+          <EllipsisParagraph tooltip={remark}>
             {remark}
           </EllipsisParagraph>
         )
@@ -539,7 +540,7 @@ export default function QueryPage() {
   }
 
   return (
-    <main className="flex h-full min-h-0 w-full flex-col gap-4">
+    <QueryContainer>
       <Card size="small" className="shrink-0">
         <QueryForm<QueryFormValues>
           fields={queryFields}
@@ -550,7 +551,6 @@ export default function QueryPage() {
           initialValues={{ status: 'all', applicant: '李晨' }}
         />
       </Card>
-
       <TableContainer
         title={
           <TableToolbar
@@ -600,6 +600,6 @@ export default function QueryPage() {
           scroll={{ x: tableScrollX }}
         />
       </TableContainer>
-    </main>
+    </QueryContainer>
   )
 }

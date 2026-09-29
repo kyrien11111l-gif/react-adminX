@@ -11,8 +11,17 @@
   width: 100%;
 }
 
+.auto-height-table-stable-wrapper {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
 .auto-height-table {
-  --auto-height-table-scrollbar-size: 6px;
+  --auto-height-table-scrollbar-size: 5px;
   --auto-height-table-scrollbar-track: var(
     --ant-color-fill-tertiary,
     rgb(0 0 0 / 4%)
@@ -33,10 +42,24 @@
 .auto-height-table .ant-table-container {
   flex: 1 1 auto;
   min-height: 0;
+  border-block-end: var(
+    --ant-line-width,
+    1px
+  ) solid var(--ant-table-border-color, var(--ant-color-border-secondary, #f0f0f0));
 }
 
 .auto-height-table .ant-table-header {
   flex: 0 0 auto;
+}
+
+/* 剩余宽度由表头和表体共用的空白列吸收，避免两张 table 独立摊分列宽。 */
+.auto-height-table .auto-height-table-fill-cell {
+  border-inline-start: 0 !important;
+  padding-inline: 0 !important;
+}
+
+.auto-height-table .auto-height-table-fill-cell-with-fixed-right {
+  border-inline-end: 0 !important;
 }
 
 /* 滚动条占位列由 rc-table 按实际滚动条宽度生成，这里只处理视觉样式。 */
@@ -150,6 +173,12 @@
 /* 空状态固定在表体可视区域内，不跟随横向滚动内容产生位移。 */
 .auto-height-table-empty .ant-table-expanded-row-fixed {
   width: 100cqi !important;
+}
+
+/* 表格缩放用于填满容器，但不能改变空状态图标和文字的比例。 */
+.auto-height-table-empty .ant-empty {
+  transform: scaleX(var(--stable-table-scale-x-inverse, 1));
+  transform-origin: center;
 }
 
 /* 固定右列会盖住相邻滚动列的右边框，在固定列起始处补上分隔线。 */

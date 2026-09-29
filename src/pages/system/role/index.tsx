@@ -1,6 +1,7 @@
 import { SafetyCertificateOutlined, TeamOutlined } from '@ant-design/icons'
 import { Card, Col, Row, Statistic, Table, Tag, Typography } from 'antd'
 import type { TableColumnsType } from 'antd'
+import { PageContainer } from '@/components/pageContainer'
 
 interface RoleRow {
   id: number
@@ -68,116 +69,101 @@ const columns: TableColumnsType<RoleRow> = [
 
 export default function RolePage() {
   return (
-    <div className="mx-auto flex w-full flex-col gap-4">
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Card>
-            <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
-          </Card>
-        </Col>
-      </Row>
+    <PageContainer>
       <Card title="角色列表">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="角色总数" value={3} prefix={<SafetyCertificateOutlined />} />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12}>
+            <Card>
+              <Statistic title="已分配成员" value={12} prefix={<TeamOutlined />} />
+            </Card>
+          </Col>
+        </Row>
+
         <Table<RoleRow>
           rowKey="id"
           columns={columns}
@@ -186,6 +172,6 @@ export default function RolePage() {
           scroll={{ x: 640 }}
         />
       </Card>
-    </div>
+    </PageContainer>
   )
 }

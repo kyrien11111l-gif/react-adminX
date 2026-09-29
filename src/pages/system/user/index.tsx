@@ -20,6 +20,7 @@ import { AutoHeightTable } from '@/components/autoHeightTable'
 import { TableToolbar } from '@/components/tableToolbar'
 import type { TableDensity } from '@/components/tableToolbar'
 import { useTableColumns } from '@/hooks'
+import { PageContainer } from '@/components/pageContainer'
 
 interface UserRow {
   id: number
@@ -236,8 +237,8 @@ export default function UserPage() {
   } = useTableColumns<UserRow>({ columns })
 
   return (
-    <div className="mx-auto w-full ">
-      <Card>
+    <PageContainer>
+      <Card >
         <Flex justify="space-between" align="start" gap={16} wrap className="mb-6">
           <div>
             <Typography.Title level={3}>用户列表</Typography.Title>
@@ -290,7 +291,43 @@ export default function UserPage() {
           }}
           scroll={{ x: tableScrollX }}
         />
+        <AutoHeightTable<UserRow>
+          rowKey="id"
+          columns={tableColumns}
+          dataSource={filteredUsers}
+          size={density}
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: false,
+            showTotal: (total) => `共 ${total} 条`
+          }}
+          scroll={{ x: tableScrollX }}
+        />
+        <AutoHeightTable<UserRow>
+          rowKey="id"
+          columns={tableColumns}
+          dataSource={filteredUsers}
+          size={density}
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: false,
+            showTotal: (total) => `共 ${total} 条`
+          }}
+          scroll={{ x: tableScrollX }}
+        />
+        <AutoHeightTable<UserRow>
+          rowKey="id"
+          columns={tableColumns}
+          dataSource={filteredUsers}
+          size={density}
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: false,
+            showTotal: (total) => `共 ${total} 条`
+          }}
+          scroll={{ x: tableScrollX }}
+        />
       </Card>
-    </div>
+    </PageContainer>
   )
 }

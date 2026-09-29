@@ -1,7 +1,13 @@
 import { Table } from 'antd'
 import type { TablePaginationConfig, TableProps } from 'antd'
-import { useLayoutEffect, useRef, type CSSProperties } from 'react'
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type CSSProperties
+} from 'react'
 import '@/components/autoHeightTable/style.css'
+import { addAutoHeightTableFillColumn } from '@/components/autoHeightTable/columns'
 import type { AutoHeightTableProps } from '@/components/autoHeightTable/type'
 import { getResizableTableComponents } from '@/components/resizableTableHeader/merge'
 import {
@@ -60,6 +66,7 @@ function normalizePagination(
 export function AutoHeightTable<RecordType extends object>({
   rootClassName,
   scroll,
+  columns,
   style,
   dataSource,
   pagination,
@@ -69,6 +76,7 @@ export function AutoHeightTable<RecordType extends object>({
   ...restProps
 }: AutoHeightTableProps<RecordType>) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const visualRef = useRef<HTMLDivElement>(null)
   const isEmpty = !dataSource?.length
   const normalizedPagination =
     pagination === false
@@ -86,10 +94,15 @@ export function AutoHeightTable<RecordType extends object>({
     typeof scrollX === 'number'
       ? getTableScrollWidth(scrollX, selectionColumnWidth)
       : scrollX
+  const resolvedColumns = useMemo(
+    () => addAutoHeightTableFillColumn(columns),
+    [columns]
+  )
   const tableRef = useStableTableWidth(
     smoothSidebarResize,
     containerRef,
-    typeof resolvedScrollX === 'number' ? resolvedScrollX : undefined
+    typeof resolvedScrollX === 'number' ? resolvedScrollX : undefined,
+    visualRef
   )
   useLayoutEffect(() => {
     const table = tableRef.current?.nativeElement
@@ -114,26 +127,29 @@ export function AutoHeightTable<RecordType extends object>({
         isEmpty ? 'auto-height-table-empty' : null
       )}
     >
-      <Table<RecordType>
-        {...restProps}
-        components={components}
-        ref={tableRef}
-        dataSource={dataSource}
-        pagination={normalizedPagination}
-        rowSelection={rowSelection}
-        rootClassName={joinClassNames(
-          'auto-height-table',
-          rootClassName
-        )}
-        scroll={{
-          ...scroll,
-          x: resolvedScrollX,
-          y: '100%'
-        }}
-        style={tableStyle}
-        styles={tableStyles}
-        bordered
-      />
+      <div ref={visualRef} className="auto-height-table-stable-wrapper">
+        <Table<RecordType>
+          {...restProps}
+          components={components}
+          columns={resolvedColumns}
+          ref={tableRef}
+          dataSource={dataSource}
+          pagination={normalizedPagination}
+          rowSelection={rowSelection}
+          rootClassName={joinClassNames(
+            'auto-height-table',
+            rootClassName
+          )}
+          scroll={{
+            ...scroll,
+            x: resolvedScrollX,
+            y: '100%'
+          }}
+          style={tableStyle}
+          styles={tableStyles}
+          bordered
+        />
+      </div>
     </div>
   )
 }

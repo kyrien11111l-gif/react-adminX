@@ -10,11 +10,41 @@ import { getStableTableLayoutWidth } from '@/components/virtualTable/utils'
 import { useLayoutStore } from '@/stores'
 
 const MAX_STABLE_TABLE_SCALE = 1.25
+const VISUAL_SCALE_VARIABLE = '--stable-table-scale-x'
+const VISUAL_SCALE_INVERSE_VARIABLE = '--stable-table-scale-x-inverse'
 
+function setVisualElementWidth(element: HTMLElement, width: number) {
+  element.style.width = `${width}px`
+  element.style.transformOrigin = 'left top'
+  element.style.willChange = 'transform'
+}
+
+function setVisualElementScale(element: HTMLElement, scale: number) {
+  const safeScale = scale > 0 ? scale : 1
+
+  element.style.setProperty(VISUAL_SCALE_VARIABLE, `${safeScale}`)
+  element.style.setProperty(
+    VISUAL_SCALE_INVERSE_VARIABLE,
+    `${1 / safeScale}`
+  )
+  element.style.transform = `scaleX(${safeScale})`
+}
+
+function clearVisualElementStyles(element: HTMLElement) {
+  element.style.removeProperty('width')
+  element.style.removeProperty('transform')
+  element.style.removeProperty('transform-origin')
+  element.style.removeProperty('will-change')
+  element.style.removeProperty(VISUAL_SCALE_VARIABLE)
+  element.style.removeProperty(VISUAL_SCALE_INVERSE_VARIABLE)
+}
+
+/* 将视觉缩放放在外层容器，避免 rc-table 读取缩放后的表头宽度。 */
 export function useStableTableWidth(
   enabled: boolean,
   containerRef?: RefObject<HTMLElement | null>,
-  maxLayoutWidth?: number
+  maxLayoutWidth?: number,
+  visualRef?: RefObject<HTMLElement | null>
 ) {
   const tableRef = useRef<TableRef>(null)
   const maxLayoutWidthRef = useRef(maxLayoutWidth)
@@ -28,8 +58,10 @@ export function useStableTableWidth(
 
     const tableElement = tableRef.current?.nativeElement
     const container = containerRef?.current ?? tableElement?.parentElement
+    const visualRefElement = visualRef?.current
+    const visualElement = visualRefElement ?? tableElement
 
-    if (!tableElement || !container) {
+    if (!tableElement || !container || !visualElement) {
       return
     }
 
@@ -38,7 +70,7 @@ export function useStableTableWidth(
     const sidebarWidthDifference = SIDEBAR_WIDTH - SIDEBAR_COLLAPSED_WIDTH
     const updateVisualWidth = (availableWidth: number) => {
       if (layoutWidth > 0) {
-        tableElement.style.transform = `scaleX(${availableWidth / layoutWidth})`
+        setVisualElementScale(visualElement, availableWidth / layoutWidth)
       }
     }
     const updateLayoutWidth = () => {
@@ -62,8 +94,7 @@ export function useStableTableWidth(
           )
         : stableWidth
       tableElement.style.width = `${layoutWidth}px`
-      tableElement.style.transformOrigin = 'left top'
-      tableElement.style.willChange = 'transform'
+      setVisualElementWidth(visualElement, layoutWidth)
       updateVisualWidth(container.clientWidth)
     }
 
@@ -96,11 +127,9 @@ export function useStableTableWidth(
       window.removeEventListener('resize', updateLayoutWidth)
       updateLayoutWidthRef.current = undefined
       tableElement.style.removeProperty('width')
-      tableElement.style.removeProperty('transform')
-      tableElement.style.removeProperty('transform-origin')
-      tableElement.style.removeProperty('will-change')
+      clearVisualElementStyles(visualElement)
     }
-  }, [containerRef, enabled])
+  }, [containerRef, enabled, visualRef])
 
   useLayoutEffect(() => {
     if (Object.is(previousMaxLayoutWidthRef.current, maxLayoutWidth)) {
