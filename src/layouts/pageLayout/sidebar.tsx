@@ -86,8 +86,8 @@ export function Sidebar({
     <Layout.Sider
       className={
         mobile
-          ? 'h-full border-e border-e-[var(--ant-color-border-secondary)] !bg-[var(--ant-color-bg-container)] !transition-[flex,max-width,min-width,width]'
-          : 'sticky top-0 h-dvh overflow-hidden border-e border-e-[var(--ant-color-border-secondary)] !bg-[var(--ant-color-bg-container)] !transition-[flex,max-width,min-width,width] max-[991px]:hidden'
+          ? 'h-full border-e border-e-[var(--ant-color-border-secondary)] !bg-[var(--ant-color-bg-container)] !transition-none'
+          : '!fixed inset-y-0 start-0 z-20 h-dvh overflow-hidden border-e border-e-[var(--ant-color-border-secondary)] !max-w-none !min-w-0 !flex-none !bg-[var(--ant-color-bg-container)] !transition-[width] motion-reduce:!transition-none max-[991px]:hidden'
       }
       width={SIDEBAR_WIDTH}
       collapsedWidth={SIDEBAR_COLLAPSED_WIDTH}

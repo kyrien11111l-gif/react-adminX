@@ -155,7 +155,7 @@ export function TwoColumnNavigation({
       trigger={null}
       theme="light"
       aria-label="双列导航"
-      className="sticky top-0 h-dvh overflow-hidden !bg-[var(--ant-color-bg-container)] !transition-[flex,max-width,min-width,width] max-[991px]:hidden"
+      className="!fixed inset-y-0 start-0 z-20 h-dvh overflow-hidden !max-w-none !min-w-0 !flex-none !bg-[var(--ant-color-bg-container)] !transition-[width] motion-reduce:!transition-none max-[991px]:hidden"
       styles={{
         root: {
           boxShadow: token.boxShadowSecondary
@@ -202,7 +202,7 @@ export function TwoColumnNavigation({
 
         {secondColumnMenus.length ? (
           <div
-            className="flex h-full min-w-0 shrink-0 flex-col border-e border-e-[var(--ant-color-border-secondary)] !transition-[width]"
+            className="flex h-full min-w-0 shrink-0 flex-col border-e border-e-[var(--ant-color-border-secondary)] !transition-[width] motion-reduce:!transition-none"
             style={{ width: secondColumnWidth }}
           >
             <nav className="min-h-0 flex-1" aria-label="二级导航菜单">

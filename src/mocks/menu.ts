@@ -86,6 +86,18 @@ const mockMenus: Menu[] = [
         }
       },
       {
+        id: 'system-native-table',
+        name: '原生表格',
+        path: 'native-table',
+        component: 'system/nativeTable/index',
+        meta: {
+          title: '原生表格',
+          icon: 'TableOutlined',
+          permission: 'system:native-table:list',
+          layout: 'default'
+        }
+      },
+      {
         id: 'system-tanstack',
         name: 'TanStack 表格',
         path: 'tanstack',

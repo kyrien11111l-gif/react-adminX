@@ -6,6 +6,8 @@ import {
   MIXED_NAVIGATION,
   MOBILE_LAYOUT_MEDIA_QUERY,
   SIDE_NAVIGATION,
+  SIDEBAR_COLLAPSED_WIDTH,
+  SIDEBAR_WIDTH,
   TOP_NAVIGATION,
   TWO_COLUMN_NAVIGATION
 } from '@/constants'
@@ -73,6 +75,15 @@ export function PageLayout() {
     currentNavigationStyle === SIDE_NAVIGATION ||
     isTwoColumnNavigation ||
     (isMixedNavigation && activeSidebarMenus.length > 0)
+  const currentSidebarWidth = collapsed
+    ? SIDEBAR_COLLAPSED_WIDTH
+    : SIDEBAR_WIDTH
+  const navigationWidth =
+    contentMaximized || isMobile || !hasSidebar
+      ? 0
+      : isTwoColumnNavigation
+        ? SIDEBAR_COLLAPSED_WIDTH + (activeTopMenu ? currentSidebarWidth : 0)
+        : currentSidebarWidth
   const headerNavigation = isTopNavigation ? (
     <div className="flex h-full min-w-0 items-center">
       <BrandLogo
@@ -91,8 +102,9 @@ export function PageLayout() {
 
   return (
     <Layout
-      className="h-dvh overflow-hidden"
+      className="h-dvh overflow-hidden !transition-[padding-inline-start] motion-reduce:!transition-none"
       hasSider={!contentMaximized && hasSidebar}
+      style={{ paddingInlineStart: navigationWidth }}
     >
       {!contentMaximized && currentNavigationStyle === SIDE_NAVIGATION ? (
         <Sidebar collapsed={collapsed} />

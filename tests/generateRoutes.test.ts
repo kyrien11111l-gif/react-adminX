@@ -4,6 +4,7 @@ import { PageLayout } from '@/layouts/pageLayout'
 import {
   ComponentNotFoundPage,
   generateRoutes,
+  hasRouteComponent,
   loadComponent
 } from '@/router/dynamic'
 import type { Menu } from '@/types'
@@ -97,5 +98,9 @@ describe('generateRoutes', () => {
 
   it('returns the lazy component-not-found page when a module cannot be resolved', () => {
     expect(loadComponent('not-exists/index')).toBe(ComponentNotFoundPage)
+  })
+
+  it('resolves the native Ant Design table page component', () => {
+    expect(hasRouteComponent('system/nativeTable/index')).toBe(true)
   })
 })

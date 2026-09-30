@@ -13,6 +13,7 @@ const mockPermissions = [
   'system:role:list',
   'system:query:list',
   'system:table-test:list',
+  'system:native-table:list',
   'system:virtual-query:list',
   'system:tanstack:list'
 ]
