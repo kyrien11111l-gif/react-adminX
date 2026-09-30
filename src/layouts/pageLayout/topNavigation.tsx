@@ -86,6 +86,7 @@ export function TopNavigation({
       selectedKeys={activeMenuKey ? [activeMenuKey] : []}
       onClick={handleMenuClick}
       style={{
+        borderBottom: 'none',
         height: headerHeight,
         lineHeight: `${headerHeight}px`
       }}
