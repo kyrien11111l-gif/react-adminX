@@ -8,6 +8,7 @@ import { registerUnauthorizedHandler } from '@/services'
 import { useLayoutStore } from '@/stores'
 import { createLoginUrl } from '@/utils/navigation'
 import { resetSession } from '@/utils/session'
+import { applyThemeColorPrimary } from '@/utils/theme'
 
 function AppRuntime() {
   const darkMode = useLayoutStore((state) => state.darkMode)
@@ -83,6 +84,11 @@ export function App() {
   const themeColorPrimary = useLayoutStore(
     (state) => state.themeColorPrimary
   )
+
+  useEffect(() => {
+    applyThemeColorPrimary(themeColorPrimary)
+  }, [themeColorPrimary])
+
   const lightNavigationToken = useMemo(
     () =>
       theme.getDesignToken({

@@ -64,7 +64,7 @@
 
 /* 进度条使用 Ant Design 主色，并保留启动阶段的回退色。 */
 #nprogress .bar {
-  background: var(--ant-color-primary, var(--app-primary, #1677ff));
+  background: var(--app-primary, #1677ff);
 }
 
 /* 进度条高光和旋转指示器沿用同一主色。 */
@@ -73,8 +73,8 @@
 }
 
 #nprogress .spinner-icon {
-  border-top-color: var(--ant-color-primary, var(--app-primary, #1677ff));
-  border-left-color: var(--ant-color-primary, var(--app-primary, #1677ff));
+  border-top-color: var(--app-primary, #1677ff);
+  border-left-color: var(--app-primary, #1677ff);
 }
 
 /* SimpleBar 滚动条使用主题中的三级文本色。 */

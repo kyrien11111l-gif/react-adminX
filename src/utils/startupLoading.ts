@@ -1,4 +1,5 @@
 import { useLayoutStore } from '@/stores/layout'
+import { applyThemeColorPrimary } from '@/utils/theme'
 
 const STARTUP_LOADING_ID = 'app-startup-loading'
 const STARTUP_LOADING_STYLE_ID = 'app-startup-loading-style'
@@ -75,7 +76,7 @@ function applyStartupLoadingTheme() {
   const isDark = themeMode === 'system' ? systemDarkMode : darkMode
 
   document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
-  document.documentElement.style.setProperty('--app-primary', themeColorPrimary)
+  applyThemeColorPrimary(themeColorPrimary)
 }
 
 export function showStartupLoading() {
