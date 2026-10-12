@@ -3,7 +3,7 @@ import SimpleBar from 'simplebar-react'
 
 import { joinClassNames } from '@/utils/classNames'
 
-const wrapperClassName = 'h-full p-4 overflow-hidden'
+const wrapperClassName = 'h-full overflow-hidden'
 
 interface PageContainerProps extends PropsWithChildren {
   className?: string

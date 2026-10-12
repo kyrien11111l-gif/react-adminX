@@ -266,14 +266,17 @@ export function QueryForm<Values extends object>({
         <Col
           {...defaultColProps}
           {...actionColAttributes}
-          style={actionColStyle}
+          style={{ marginInlineStart: 'auto', ...actionColStyle }}
         >
           <Form.Item
             label={null}
             wrapperCol={{ span: 24 }}
             style={{ marginBottom: 0, marginInlineEnd: 0, width: '100%' }}
           >
-            <Space size="small">
+            <Space
+              size="small"
+              style={{ width: '100%', justifyContent: 'flex-end' }}
+            >
               <Button
                 type="primary"
                 htmlType="submit"

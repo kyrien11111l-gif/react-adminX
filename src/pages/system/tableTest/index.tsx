@@ -490,7 +490,6 @@ export default function TableTestPage() {
         <VirtualTable<VirtualQueryRow>
           rowKey="id"
           tableLayout="fixed"
-          smoothSidebarResize
           columns={resolvedTableColumns}
           dataSource={dataSource}
           loading={loading}

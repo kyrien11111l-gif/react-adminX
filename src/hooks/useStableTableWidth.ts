@@ -10,6 +10,7 @@ import { getStableTableLayoutWidth } from '@/components/virtualTable/utils'
 import { useLayoutStore } from '@/stores'
 
 const MAX_STABLE_TABLE_SCALE = 1.25
+const VIEWPORT_RESIZE_SETTLE_DELAY = 200
 const VISUAL_SCALE_VARIABLE = '--stable-table-scale-x'
 const VISUAL_SCALE_INVERSE_VARIABLE = '--stable-table-scale-x-inverse'
 
@@ -66,6 +67,8 @@ export function useStableTableWidth(
     }
 
     let frameId = 0
+    let viewportResizeTimer = 0
+    let viewportResizing = false
     let layoutWidth = 0
     const sidebarWidthDifference = SIDEBAR_WIDTH - SIDEBAR_COLLAPSED_WIDTH
     const updateVisualWidth = (availableWidth: number) => {
@@ -97,12 +100,30 @@ export function useStableTableWidth(
       setVisualElementWidth(visualElement, layoutWidth)
       updateVisualWidth(container.clientWidth)
     }
+    const releaseLayoutWidth = () => {
+      layoutWidth = 0
+      tableElement.style.removeProperty('width')
+      clearVisualElementStyles(visualElement)
+    }
+    const handleViewportResize = () => {
+      viewportResizing = true
+      window.clearTimeout(viewportResizeTimer)
+      releaseLayoutWidth()
+      viewportResizeTimer = window.setTimeout(() => {
+        viewportResizing = false
+        updateLayoutWidth()
+      }, VIEWPORT_RESIZE_SETTLE_DELAY)
+    }
 
     updateLayoutWidthRef.current = updateLayoutWidth
     updateLayoutWidth()
     const resizeObserver = typeof ResizeObserver === 'undefined'
       ? null
       : new ResizeObserver((entries) => {
+          if (viewportResizing) {
+            return
+          }
+
           updateVisualWidth(
             entries[0]?.contentRect.width ?? container.clientWidth
           )
@@ -118,16 +139,16 @@ export function useStableTableWidth(
         frameId = requestAnimationFrame(updateLayoutWidth)
       }
     })
-    window.addEventListener('resize', updateLayoutWidth)
+    window.addEventListener('resize', handleViewportResize)
 
     return () => {
       cancelAnimationFrame(frameId)
+      window.clearTimeout(viewportResizeTimer)
       resizeObserver?.disconnect()
       unsubscribe()
-      window.removeEventListener('resize', updateLayoutWidth)
+      window.removeEventListener('resize', handleViewportResize)
       updateLayoutWidthRef.current = undefined
-      tableElement.style.removeProperty('width')
-      clearVisualElementStyles(visualElement)
+      releaseLayoutWidth()
     }
   }, [containerRef, enabled, visualRef])
 

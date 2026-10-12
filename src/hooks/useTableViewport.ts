@@ -1,3 +1,4 @@
+import type { TableRef } from 'antd'
 import {
   useCallback,
   useLayoutEffect,
@@ -9,7 +10,6 @@ import {
   getVirtualTableAvailableHeight,
   getVirtualTableBodyHeight
 } from '@/components/virtualTable/utils'
-import { useStableTableWidth } from '@/hooks/useStableTableWidth'
 
 export const tableMeasureClassNames = {
   title: 'virtual-table-measure-title',
@@ -23,7 +23,6 @@ interface UseTableViewportOptions {
   dataLength: number
   density?: string
   scrollYLimit?: number
-  smoothSidebarResize?: boolean
 }
 
 function getElementHeight(element: HTMLElement | null) {
@@ -71,11 +70,10 @@ function getPaginationHeight(root: HTMLElement) {
 export function useTableViewport({
   dataLength,
   density,
-  scrollYLimit = Number.POSITIVE_INFINITY,
-  smoothSidebarResize = false
+  scrollYLimit = Number.POSITIVE_INFINITY
 }: UseTableViewportOptions) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const tableRef = useStableTableWidth(smoothSidebarResize, containerRef)
+  const tableRef = useRef<TableRef>(null)
   const [containerMaxHeight, setContainerMaxHeight] = useState<number>()
   const [sectionHeight, setSectionHeight] = useState<number>()
   const [scrollY, setScrollY] = useState(DEFAULT_VIRTUAL_TABLE_SCROLL_Y)

@@ -1,7 +1,7 @@
 import { joinClassNames } from '@/utils/classNames'
 import type { PropsWithChildren } from 'react'
 
-const wrapperClassName = 'flex h-full min-h-0 w-full flex-col gap-4 p-4'
+const wrapperClassName = 'flex h-full min-h-0 w-full flex-col gap-4 p-1'
 
 interface QueryContainerProps extends PropsWithChildren {
   className?: string

@@ -58,7 +58,6 @@ function VirtualTableInner<RecordType extends object>(
     scroll,
     style,
     components: customComponents,
-    smoothSidebarResize = true,
     ...tableProps
   }: VirtualTableProps<RecordType>,
   ref: ForwardedRef<TableRef>
@@ -91,8 +90,7 @@ function VirtualTableInner<RecordType extends object>(
   } = useTableViewport({
     dataLength: tableProps.dataSource?.length ?? 0,
     density: tableProps.size,
-    scrollYLimit,
-    smoothSidebarResize
+    scrollYLimit
   })
 
   const setTableRef = useCallback(
